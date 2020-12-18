@@ -77,7 +77,7 @@ namespace Balance_and_Gross_errors
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Balance and Gross errors API");
             });
 
             app.UseRouting();
