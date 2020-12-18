@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "VLwSQWFbmFZAEWdxhwWqw0xaLsHp5mWGHFo8b4jMPgp4lsF1LesWSi3HrWR/d+Yx43TzfXrWRrtsqI2/9hCc6A==",
+  "dgSpecHash": "um66nLw72O+EN2ugfWPLW0hqLSPSSYKLaO+rMAC4IMpDESfr6lk/D9s/Hky0QFQwLOpyRH1pDKe/VWER6yGCjQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Matvey\\source\\repos\\Balance_and_Gross_errors\\Balance_and_Gross_errors\\Balance_and_Gross_errors.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Matvey\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\3.1.10\\microsoft.aspnetcore.app.ref.3.1.10.nupkg.sha512",
+    "C:\\Users\\Matvey\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\3.1.10\\microsoft.netcore.app.host.win-x64.3.1.10.nupkg.sha512"
+  ],
   "logs": []
 }
