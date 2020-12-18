@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 
 namespace Balance_and_Gross_errors
 {
+#pragma warning disable CS1591
     public class Program
     {
+        
         public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();
@@ -23,4 +25,5 @@ namespace Balance_and_Gross_errors
                     webBuilder.UseStartup<Startup>();
                 });
     }
+#pragma warning restore CS1591
 }
