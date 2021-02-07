@@ -10,7 +10,7 @@ namespace Balance_and_Gross_errors.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class BalanceController : Controller
+    public class BalanceController : ControllerBase
     {
 
         private readonly ILogger<BalanceController> _logger;
