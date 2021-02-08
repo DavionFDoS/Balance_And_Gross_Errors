@@ -8,6 +8,7 @@ using Balance_and_Gross_errors.Models;
 
 namespace Balance_and_Gross_errors.Controllers
 {
+    [Produces("application/json")]
     [ApiController]
     [Route("[controller]")]
     public class BalanceController : ControllerBase
@@ -21,12 +22,8 @@ namespace Balance_and_Gross_errors.Controllers
         }
 
         //[HttpPost]
-        //public InputVariables Post()
-        //{
-        //    InputVariables inputVariables = new InputVariables();
-        //    inputVariables.setValues();
-        //    return inputVariables;
-        //}
+        
+        
 
 
     }

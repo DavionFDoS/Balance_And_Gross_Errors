@@ -47,7 +47,7 @@ namespace Balance_and_Gross_errors
                     License = new OpenApiLicense
                     {
                         Name = "Use under LICX",
-                        Url = new Uri("https://example.com/license"),
+                        Url = new Uri("http://unlicense.org"),
                     }
                 });
 
