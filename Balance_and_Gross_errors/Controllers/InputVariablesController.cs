@@ -21,7 +21,7 @@ namespace Balance_and_Gross_errors.Controllers
         }
         // GET:  InputVariablesController/Create
         [HttpGet("{id}")]
-        public async Task<ActionResult<InputVariables>> GetId(long id)
+        public async Task<ActionResult<InputVariables>> GetId(string id)
         {
             var Item = await _context.InputVariablesList.FindAsync(id);
 
