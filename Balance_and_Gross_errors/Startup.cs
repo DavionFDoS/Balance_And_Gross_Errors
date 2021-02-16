@@ -13,7 +13,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.EntityFrameworkCore;
+using Balance_and_Gross_errors.Models;
 
 namespace Balance_and_Gross_errors
 {
@@ -29,6 +30,7 @@ namespace Balance_and_Gross_errors
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<InputVariablesContext>(opt =>opt.UseInMemoryDatabase("VarList"));
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
