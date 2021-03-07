@@ -816,27 +816,20 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Matvey\\.nuget\\packages\\": {},
-    "C:\\Microsoft\\Xamarin\\NuGet\\": {},
-    "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
+    "C:\\Users\\Admin\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Matvey\\source\\repos\\Balance_and_Gross_errors\\Balance_and_Gross_errors\\Balance_and_Gross_errors.csproj",
+      "projectUniqueName": "F:\\Balance2\\Balance_And_Gross_Errors\\Balance_and_Gross_errors\\Balance_and_Gross_errors.csproj",
       "projectName": "Balance_and_Gross_errors",
-      "projectPath": "C:\\Users\\Matvey\\source\\repos\\Balance_and_Gross_errors\\Balance_and_Gross_errors\\Balance_and_Gross_errors.csproj",
-      "packagesPath": "C:\\Users\\Matvey\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Matvey\\source\\repos\\Balance_and_Gross_errors\\Balance_and_Gross_errors\\obj\\",
+      "projectPath": "F:\\Balance2\\Balance_And_Gross_Errors\\Balance_and_Gross_errors\\Balance_and_Gross_errors.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "F:\\Balance2\\Balance_And_Gross_Errors\\Balance_and_Gross_errors\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Microsoft\\Xamarin\\NuGet\\",
-        "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Matvey\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "netcoreapp3.1"
@@ -884,16 +877,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[3.1.10, 3.1.10]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.win-x64",
-            "version": "[3.1.10, 3.1.10]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -902,16 +885,8 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.101\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.102\\RuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "Undefined",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Ошибка чтения файла кэша C:\\Users\\Matvey\\source\\repos\\Balance_and_Gross_errors\\Balance_and_Gross_errors\\obj\\project.nuget.cache: Invalid property identifier character: <. Path 'version', line 3, position 0."
-    }
-  ]
+  }
 }
