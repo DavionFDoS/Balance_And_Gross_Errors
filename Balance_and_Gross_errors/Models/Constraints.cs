@@ -14,7 +14,7 @@ namespace Balance_and_Gross_errors.Models
             LowerBound = 0.0;
             UpperBound = 0.0;
         }
-        
+
     }
 
 }

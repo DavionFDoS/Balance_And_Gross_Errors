@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Balance_and_Gross_errors.Models;
-
+using System.IO;
 namespace Balance_and_Gross_errors.Controllers
 {
     [ApiController]
@@ -29,7 +29,6 @@ namespace Balance_and_Gross_errors.Controllers
             {
                 return NotFound();
             }
-            //check
 
             return Item;
         }
@@ -37,10 +36,26 @@ namespace Balance_and_Gross_errors.Controllers
         [HttpPost]
         public async Task<ActionResult<InputVariables>> Post(InputVariables input)
         {
+            BalanceInput balanceInput = new BalanceInput();
+            balanceInput.BalanceInputVariables.Add(input);
+            
             if (input == null)
             {
                 return BadRequest();
             }
+            //string writePath = @"F:\Balance2\Balance_And_Gross_Errors\file.txt";
+            //using (StreamWriter sw = new StreamWriter(writePath, false, System.Text.Encoding.Default))
+            //{
+            //    foreach(InputVariables element in balanceInput.BalanceInputVariables)
+            //    {
+            //        sw.WriteLine(element.id);
+            //        sw.WriteLine(element.sourceId);
+            //        sw.WriteLine(element.destinationId);
+            //        sw.WriteLine(element.name);
+            //        sw.WriteLine(element.isExcluded);
+            //    }
+                
+            //}
             _context.InputVariablesList.Add(input);
             await _context.SaveChangesAsync();
 
