@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
 using Balance_and_Gross_errors.Models;
-using System.IO;
+using Balance_and_Gross_errors.Solverdir;
 namespace Balance_and_Gross_errors.Controllers
 {
     [ApiController]
@@ -14,54 +15,70 @@ namespace Balance_and_Gross_errors.Controllers
     public class InputVariablesController : ControllerBase
     {
         private readonly InputVariablesContext _context;
-
+        BalanceInput balanceInput = new BalanceInput();
         public InputVariablesController(InputVariablesContext context)
         {
             _context = context;
         }
-        // GET:  InputVariablesController/Create
-        [HttpGet("{id}")]
-        public async Task<ActionResult<InputVariables>> GetId(string id)
-        {
-            var Item = await _context.InputVariablesList.FindAsync(id);
-
-            if (Item == null)
-            {
-                return NotFound();
-            }
-
-            return Item;
-        }
+        // POST: InputVariablesController/aa
+        //[HttpPost]
+        //public async Task<Responce> GetBalance(BalanceInput input)
+        //{
+        //    return await Task.Run(() =>
+        //    {
+        //        try
+        //        {
+        //            // Сведение баланса
+        //            Solver solver = new Solver(input);
+        //            var output = solver.reconciledValuesArray;
+        //            return new Responce
+        //            {
+        //                Type = "result",
+        //                Data = output
+        //            };
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            return new Responce
+        //            {
+        //                Type = "error",
+        //                Data = e.Message
+        //            };
+        //        }
+        //    });
+        //}
         // POST: InputVariablesController/Create
         [HttpPost]
-        public async Task<ActionResult<InputVariables>> Post(InputVariables input)
+        public async Task<Responce> GlobalTest (BalanceInput input)
         {
-            BalanceInput balanceInput = new BalanceInput();
-            balanceInput.BalanceInputVariables.Add(input);
-            
-            if (input == null)
+            return await Task.Run(() =>
             {
-                return BadRequest();
-            }
-            //string writePath = @"F:\Balance2\Balance_And_Gross_Errors\file.txt";
-            //using (StreamWriter sw = new StreamWriter(writePath, false, System.Text.Encoding.Default))
-            //{
-            //    foreach(InputVariables element in balanceInput.BalanceInputVariables)
-            //    {
-            //        sw.WriteLine(element.id);
-            //        sw.WriteLine(element.sourceId);
-            //        sw.WriteLine(element.destinationId);
-            //        sw.WriteLine(element.name);
-            //        sw.WriteLine(element.isExcluded);
-            //    }
-                
-            //}
-            _context.InputVariablesList.Add(input);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetId), new { id = input.id }, input);
+                try
+                {
+                    // Решение задачи
+                    Solver solver = new Solver(input);
+                    var output = solver.GTR;
+                    //var output1 = solver.reconciledValuesArray;
+                    return new Responce
+                    {
+                        Type = "result",
+                        Data = output,
+                        //Data1 = output1
+                    };
+                }
+                catch (Exception e)
+                {
+                    return new Responce
+                    {
+                        Type = "error",
+                        Data = e.Message,
+                        //Data1 = e.Message
+                    };
+                }
+            });
         }
-
+        
        
+
     }
 }

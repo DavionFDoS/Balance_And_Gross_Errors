@@ -25,9 +25,14 @@ namespace Balance_and_Gross_errors.Graphdir
             {
                 string sourceId = balanceInput.BalanceInputVariables[i].sourceId;
                 string destinationId = balanceInput.BalanceInputVariables[i].destinationId;
-                if (sourceId != null)
+                if (sourceId != "null")
                 {
                     bool isExisted = false;
+                    if(vertexList.Count == 0)
+                    {
+                        vertexList.Add(new Vertex(sourceId));
+                        isExisted = true;
+                    }
                     foreach (Vertex vertex in vertexList)
                     {
                         if (sourceId.Equals(vertex.Id))
@@ -41,9 +46,15 @@ namespace Balance_and_Gross_errors.Graphdir
                         vertexList.Add(new Vertex(sourceId));
                     }
                 }
-                else if (destinationId != null)
+                else if (destinationId != "null")
                 {
                     bool isExisted = false;
+                    if (vertexList.Count == 0)
+                    {
+                        vertexList.Add(new Vertex(destinationId));
+                        isExisted = true;
+                    }
+
                     foreach (Vertex vertex in vertexList)
                     {
                         if (destinationId.Equals(vertex.Id))
@@ -52,7 +63,7 @@ namespace Balance_and_Gross_errors.Graphdir
                             break;
                         }
                     }
-                    if (!isExisted)
+                    if (!isExisted && vertexList.Count != 0)
                     {
                         vertexList.Add(new Vertex(destinationId));
                     }
