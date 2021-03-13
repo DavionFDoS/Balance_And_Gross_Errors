@@ -109,26 +109,26 @@ namespace Balance_and_Gross_errors.Solverdir
             }
             var measurability = temp.ToArray();
             var tolerance = absTolerance.ToArray();
-            string writePath = @"F:\Balance2\Balance_And_Gross_Errors\file.txt";
-            using (StreamWriter sw = new StreamWriter(writePath, false, System.Text.Encoding.Default))
-            {
-                //sw.WriteLine(this.countOfThreads);
+            //string writePath = @"F:\Balance2\Balance_And_Gross_Errors\file.txt";
+            //using (StreamWriter sw = new StreamWriter(writePath, false, System.Text.Encoding.Default))
+            //{
+            //    //sw.WriteLine(this.countOfThreads);
 
-                for (int i = 0; i < countOfThreads; i++)
-                {
-                    //sw.WriteLine(dVector[i]);
-                    //sw.WriteLine(H[i, i]);
-                    // sw.WriteLine(this.measuredValues[i]);
-                    //sw.WriteLine(this.measureIndicator[i,i]);
-                    //sw.WriteLine(this.metrologicRangeUpperBound[i]);
-                    //sw.WriteLine(this.metrologicRangeLowerBound[i]);
-                    sw.WriteLine(absTolerance[i]);
-                    //for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
-                    //    sw.Write(this.incidenceMatrix[i, j]+"\t");
-                    //sw.Write("\n");
-                }
+            //    for (int i = 0; i < countOfThreads; i++)
+            //    {
+            //        //sw.WriteLine(dVector[i]);
+            //        //sw.WriteLine(H[i, i]);
+            //        // sw.WriteLine(this.measuredValues[i]);
+            //        //sw.WriteLine(this.measureIndicator[i,i]);
+            //        //sw.WriteLine(this.metrologicRangeUpperBound[i]);
+            //        //sw.WriteLine(this.metrologicRangeLowerBound[i]);
+            //        sw.WriteLine(absTolerance[i]);
+            //        //for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
+            //        //    sw.Write(this.incidenceMatrix[i, j]+"\t");
+            //        //sw.Write("\n");
+            //    }
 
-            }
+            //}
             GTR = StartGlobalTest(x0, a, measurability, tolerance);
 
             return GTR;
