@@ -9,6 +9,7 @@ namespace Balance_and_Gross_errors.Models
     public class BalanceInput
     {
         private List<InputVariables> balanceInputVariables;
+
         public BalanceInput()
         {
             this.balanceInputVariables = new List<InputVariables>();

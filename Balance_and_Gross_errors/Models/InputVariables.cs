@@ -15,14 +15,77 @@ namespace Balance_and_Gross_errors.Models
         public double measured { get; set; }
         //public Constraints metrologicRange { get;  set; }
         //public Constraints technologicRange { get;  set; }
-        public double metrologicUpperBound { get; set; }
-        public double metrologicLowerBound { get; set; }
-        public double technologicUpperBound { get; set; }
-        public double technologicLowerBound { get; set; }
+        public double metrologicUpperBound; 
+        public double MetrologicUpperBound
+        {
+            set
+            {
+                if ((value < 0) || (metrologicLowerBound >metrologicUpperBound))
+                {
+                    throw new ArgumentNullException(nameof(metrologicUpperBound));
+                }
+                else
+                {
+                    metrologicUpperBound = value;
+                }
+            }
+            get { return metrologicUpperBound; }
+        }
+
+        public double metrologicLowerBound;
+        public double MetrologicLowerBound
+        {
+            set
+            {
+                if ((value < 0) || (metrologicLowerBound > metrologicUpperBound))
+                {
+                    throw new ArgumentNullException(nameof(metrologicLowerBound));
+                }
+                else
+                {
+                    metrologicLowerBound = value;
+                }
+            }
+            get { return metrologicLowerBound; }
+        }
+        public double technologicUpperBound;
+        public double TechnologicUpperBound
+        {
+            set
+            {
+                if ((value < 0) || (technologicLowerBound > technologicUpperBound))
+                {
+                    throw new ArgumentNullException(nameof(technologicUpperBound));
+                }
+                else
+                {
+                    technologicUpperBound = value;
+                }
+            }
+            get { return technologicUpperBound; }
+        }
+        public double technologicLowerBound;
+        public double TechnologicLowerBound
+        {
+            set
+            {
+                if ((value < 0) || (technologicLowerBound > technologicUpperBound))
+                {
+                    throw new ArgumentNullException(nameof(technologicLowerBound));
+                }
+                else
+                {
+                    technologicLowerBound = value;
+                }
+            }
+            get { return technologicLowerBound; }
+        }
+
         public double tolerance { get; set; }
 
         public bool isMeasured { get; set; }
         public bool isExcluded { get; set; }
+        public bool useTechnologic { get; set; }
         //public InputVariables()
         //{
         //    metrologicRange = new Constraints();

@@ -10,6 +10,7 @@ using Accord.Math;
 using Accord.Statistics.Distributions.Univariate;
 using MathNet.Numerics.Distributions;
 using System.IO;
+using Accord.Math.Optimization;
 
 namespace Balance_and_Gross_errors.Solverdir
 {
@@ -30,13 +31,12 @@ namespace Balance_and_Gross_errors.Solverdir
         private SparseVector dVector;                     // d = H * x0
         private BalanceInput inputData;
         public double GTR;
-
+        public double DisbalanceOriginal;
+        public double Disbalance;
         public double[] reconciledValuesArray;
         private DenseVector absTolerance;                //вектор абсолютной погрешности
-        private DenseVector disbalanceVector; //r
-        private DenseMatrix transposedIncedence;//at
-        private DenseVector transposedDisbalance;//rt
 
+        public double[] sol;
         public Solver(BalanceInput balanceInput)
         {
             this.inputData = balanceInput;
@@ -94,10 +94,79 @@ namespace Balance_and_Gross_errors.Solverdir
             dVector = new SparseVector(countOfThreads);
             dVector = H * measuredValues;
             // Инициализация вектора сбалансированных значений
-            reconciledValues = new SparseVector(countOfThreads);
+            reconciledValues = new SparseVector(incidenceMatrix.RowCount);
             GTR = GlobalTest();
+            Balance();
         }
+        private void Balance() 
+        {
+            var func = new QuadraticObjectiveFunction(H.ToArray(), dVector.ToArray());
+            var constraints = new List<LinearConstraint>();
+            
+            for (var j = 0; j < measuredValues.ToArray().Length; j++)
+            {
+                bool flag = inputData.BalanceInputVariables[j].useTechnologic;
+                if(flag == true)
+                {
+                    constraints.Add(new LinearConstraint(1)
+                    {
+                        VariablesAtIndices = new[] { j },
+                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                        Value = inputData.BalanceInputVariables[j].technologicLowerBound
+                    });
 
+                    constraints.Add(new LinearConstraint(1)
+                    {
+                        VariablesAtIndices = new[] { j },
+                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                        Value = inputData.BalanceInputVariables[j].technologicUpperBound
+                    });
+                }
+                else
+                {
+                    constraints.Add(new LinearConstraint(1)
+                    {
+                        VariablesAtIndices = new[] { j },
+                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                        Value = inputData.BalanceInputVariables[j].metrologicLowerBound
+                    });
+
+                    constraints.Add(new LinearConstraint(1)
+                    {
+                        VariablesAtIndices = new[] { j },
+                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                        Value = inputData.BalanceInputVariables[j].metrologicUpperBound
+                    });
+                }
+            }
+            var solver = new GoldfarbIdnani(func, constraints);
+            if (!solver.Minimize()) throw new ApplicationException("Failed to solve balance task.");
+            double disbalanceOriginal = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
+            double disbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(solver.Solution))).Subtract(reconciledValues).ToArray().Euclidean();
+            DisbalanceOriginal = disbalanceOriginal;
+            Disbalance = disbalance;
+            double[] solution = new double[countOfThreads];
+            sol = new double[countOfThreads];
+            for (int i = 0; i < solution.Length; i++)
+            {
+                solution[i] = solver.Solution[i];
+                sol[i] = solution[i];
+            }
+                
+            BalanceOutput balanceOutput = new BalanceOutput();
+            List<OutputVariables> balanceOutputVariables = new List<OutputVariables>();
+            for (int i = 0; i < solution.Length; i++)
+            {
+                InputVariables outputVariable = inputData.BalanceInputVariables[i];
+                balanceOutputVariables.Add(new OutputVariables() { id = outputVariable.id, name = outputVariable.name, value = solution[i],source = outputVariable.sourceId, target = outputVariable.destinationId });
+            }
+            balanceOutput.BalanceOutputVariables = balanceOutputVariables;
+            balanceOutput.DisbalanceOriginal = disbalanceOriginal;
+            balanceOutput.Disbalance = disbalance;
+
+            return ;
+        }
+        
         public double GlobalTest()
         {
             var x0 = measuredValues.ToArray();
