@@ -1,53 +1,18 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Balance_and_Gross_errors.Controllers;
 using Balance_and_Gross_errors.Models;
+using System;
+using Newtonsoft.Json;
+using System.IO;
+
 namespace UnitTests
 {
     [TestClass]
     public class Tests
     {
         [TestMethod]
-        public void TestApiPostIncorrectComplicated()
-        {
-            InputVariables input = new InputVariables();
-            input.id = "00000000 - 0000 - 0000 - 0000 - 000000000001";
-            input.sourceId = "null";
-            input.destinationId = "00000000-0000-0000-0000-000000000001";
-            input.name = "X1";
-            input.measured = 10.005;
-            input.metrologicUpperBound = 1000;
-            input.metrologicLowerBound = 0;
-            input.technologicUpperBound = 1000;
-            input.technologicLowerBound = 0;
-            input.tolerance = 0.2;
-            input.isMeasured = true;
-            input.isExcluded = false;
-            input.useTechnologic = true;
-
-            InputVariables input1 = new InputVariables();
-            input.id = "00000000 - 0000 - 0000 - 0000 - 000000000002";
-            input.sourceId = "00000000-0000-0000-0000-000000000001";
-            input.destinationId = "null";
-            input.name = "X2";
-            input.measured = 3.033;
-            input.metrologicUpperBound = 1000;
-            input.metrologicLowerBound = 0;
-            input.technologicUpperBound = 1000;
-            input.technologicLowerBound = 0;
-            input.tolerance = 0.121;
-            input.isMeasured = true;
-            input.isExcluded = false;
-            input.useTechnologic = true;
-            var data = new BalanceInput();
-            data.BalanceInputVariables.Add(input);
-            data.BalanceInputVariables.Add(input1);
-            var controller = new InputVariablesController();
-            var result = controller.GlobalTest(data).Result;
-
-            Assert.AreEqual("error", result.Type);
-        }
-        [TestMethod]
-        public void TestGTPostString()
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestApiPostIncorrect()
         {
             const string jsonString = @"{
   ""balanceInputVariables"": [
@@ -148,7 +113,7 @@ namespace UnitTests
       ""name"": ""X7"",
       ""measured"": 0.991,
       ""metrologicUpperBound"": 1000,
-      ""metrologicLowerBound"": 0,
+      ""metrologicLowerBound"": -10,
       ""technologicUpperBound"": 1000,
       ""technologicLowerBound"": 0,
       ""tolerance"": 0.02,
@@ -159,13 +124,43 @@ namespace UnitTests
   ]
 }";
 
+            var controller = new InputVariablesController();
+            //var result = controller.GlobalTestString(jsonString).Result;
+            // Assert.AreEqual("error", result.Type);
+        }
+        [TestMethod]
+        public void TestGTPost()
+        {
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance2\Balance_And_Gross_Errors\UnitTests\Input.json"));
+
             var expected = 0.1552143053428158;
 
             var controller = new InputVariablesController();
-            var result = controller.GlobalTestString(jsonString).Result;
-            var resultData = result.Data as BalanceOutput;
+            var result = controller.GlobalTest(inputData).Result;
             Assert.AreEqual("result", result.Type);
             Assert.AreEqual(expected, result.Data);
+        }
+
+        [TestMethod]
+        public void TestBalancePost()
+        {
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance2\Balance_And_Gross_Errors\UnitTests\Input.json"));
+
+            double[] expected = new[] { 10.055612418500504,
+    3.0144745895183522,
+    7.041137828982151,
+    1.9822547563048074,
+    5.058883072677343,
+    4.067257698582969,
+    0.9916253740943739};
+
+            var controller = new InputVariablesController();
+            var result = controller.GlobalTest(inputData).Result;
+            Assert.AreEqual("result", result.Type);
+            for (var i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], Array.ConvertAll<object, double>(result.Data1, a => (double)a)[i], 0.001);
+            }
         }
     }
 }

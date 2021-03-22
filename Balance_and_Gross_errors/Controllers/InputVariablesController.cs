@@ -43,7 +43,7 @@ namespace Balance_and_Gross_errors.Controllers
                     {
                         Type = "result",
                         Data = output,
-                        Data1 = output1
+                        Data1 = Array.ConvertAll<double, object>(output1, a=>(object)a)
                     };
                 }
                 catch (Exception e)
@@ -52,35 +52,9 @@ namespace Balance_and_Gross_errors.Controllers
                     {
                         Type = "error",
                         Data = e.Message,
-                        Data1 = e.Message
                     };
                 }
             });
         }
-
-        [HttpPost]
-        public async Task<Responce> GlobalTestString([FromForm] string input)
-        {
-            try
-            {
-                // Проверка аргумента на null
-                _ = input ?? throw new ArgumentNullException(nameof(input));
-
-                // Решение задачи
-                var inputData = JsonConvert.DeserializeObject<BalanceInput>(input);
-                return await GlobalTest(inputData);
-            }
-            catch (Exception e)
-            {
-                return new Responce
-                {
-                    Type = "error",
-                    Data = e.Message
-                };
-            }
-        }
-
-
-
     }
 }

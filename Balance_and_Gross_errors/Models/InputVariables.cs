@@ -22,7 +22,7 @@ namespace Balance_and_Gross_errors.Models
             {
                 if ((value < 0) || (metrologicLowerBound >metrologicUpperBound))
                 {
-                    throw new ArgumentNullException(nameof(metrologicUpperBound));
+                    throw new ArgumentException(nameof(metrologicUpperBound));
                 }
                 else
                 {
@@ -39,7 +39,7 @@ namespace Balance_and_Gross_errors.Models
             {
                 if ((value < 0) || (metrologicLowerBound > metrologicUpperBound))
                 {
-                    throw new ArgumentNullException(nameof(metrologicLowerBound));
+                    throw new ArgumentException(nameof(metrologicLowerBound));
                 }
                 else
                 {
@@ -55,7 +55,7 @@ namespace Balance_and_Gross_errors.Models
             {
                 if ((value < 0) || (technologicLowerBound > technologicUpperBound))
                 {
-                    throw new ArgumentNullException(nameof(technologicUpperBound));
+                    throw new ArgumentException(nameof(technologicUpperBound));
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace Balance_and_Gross_errors.Models
             {
                 if ((value < 0) || (technologicLowerBound > technologicUpperBound))
                 {
-                    throw new ArgumentNullException(nameof(technologicLowerBound));
+                    throw new ArgumentException(nameof(technologicLowerBound));
                 }
                 else
                 {

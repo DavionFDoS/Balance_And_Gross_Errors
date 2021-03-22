@@ -23,10 +23,18 @@ namespace Balance_and_Gross_errors.Models
 
             set 
             {
-                foreach (InputVariables input in balanceInputVariables)
+                try 
                 {
-                    balanceInputVariables.Add(input);
+                    foreach (InputVariables input in balanceInputVariables)
+                    {
+                        balanceInputVariables.Add(input);
+                    }
                 }
+                catch (Exception e)
+                {
+                    throw new ArgumentException(nameof(e));
+                }
+
             }
         }
     }
