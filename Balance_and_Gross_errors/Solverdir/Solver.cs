@@ -191,7 +191,6 @@ namespace Balance_and_Gross_errors.Solverdir
             balanceOutput.BalanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;
-            return ;
         }
         
         public double GlobalTest()
@@ -205,26 +204,6 @@ namespace Balance_and_Gross_errors.Solverdir
             }
             var measurability = temp.ToArray();
             var tolerance = absTolerance.ToArray();
-            //string writePath = @"F:\Balance2\Balance_And_Gross_Errors\file.txt";
-            //using (StreamWriter sw = new StreamWriter(writePath, false, System.Text.Encoding.Default))
-            //{
-            //    //sw.WriteLine(this.countOfThreads);
-
-            //    for (int i = 0; i < countOfThreads; i++)
-            //    {
-            //        //sw.WriteLine(dVector[i]);
-            //        //sw.WriteLine(H[i, i]);
-            //        // sw.WriteLine(this.measuredValues[i]);
-            //        //sw.WriteLine(this.measureIndicator[i,i]);
-            //        //sw.WriteLine(this.metrologicRangeUpperBound[i]);
-            //        //sw.WriteLine(this.metrologicRangeLowerBound[i]);
-            //        sw.WriteLine(absTolerance[i]);
-            //        //for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
-            //        //    sw.Write(this.incidenceMatrix[i, j]+"\t");
-            //        //sw.Write("\n");
-            //    }
-
-            //}
             GTR = StartGlobalTest(x0, a, measurability, tolerance);
 
             return GTR;
@@ -256,69 +235,6 @@ namespace Balance_and_Gross_errors.Solverdir
             var chi = ChiSquared.InvCDF(aMatrix.RowCount, 1 - 0.05);
 
             return result[0] / chi;
-        }
-
-
-        //public double GlobalTest(BalanceInput balanceInput)
-        //{
-        //    double coef_delta = 1.96;
-        //    double maxx0 = -1000;
-        //    InputVariables variables;
-        //    DiagonalMatrix xSigma;
-        //    DenseMatrix V;
-        //    DenseMatrix A;
-        //    double xStd = 1.0;
-        //    double[] isMeas = new double[countOfThreads];//E    
-        //    for (int i = 0; i < countOfThreads; i++)
-        //    {
-        //        variables = balanceInput.BalanceInputVariables[i];
-        //        // Определение вектора погрешностей
-        //        absTolerance[i] = variables.tolerance;
-        //        maxx0 = Math.Max(maxx0, measuredValues[i]);
-        //        isMeas[i] = measureIndicator[i, i];
-        //        if (isMeas[i] == 0)
-        //            xStd = 10 * 10 * maxx0;
-        //        xStd = absTolerance[i] / coef_delta;
-        //    }
-        //    xSigma = new DiagonalMatrix(countOfThreads, countOfThreads, xStd * xStd);//E
-        //    //for (int i = 0; i < incidenceMatrix.RowCount; i++)
-        //    //    for (int j = 0; j < 1; j++)
-        //    //        transposedDisbalanceVector[i, j] = disbalanceVector[j, i];//rt
-
-        //    // Инициализация вектора дисбалансов
-        //    disbalanceVector = new DenseVector(incidenceMatrix.ColumnCount);//r
-        //    transposedIncedence = new DenseMatrix(incidenceMatrix.RowCount);//at
-        //    transposedDisbalance = new DenseVector(incidenceMatrix.RowCount);
-        //    V = new DenseMatrix(countOfThreads);//V
-        //    disbalanceVector = incidenceMatrix * measuredValues;//r
-        //    double[] darray = new double[countOfThreads];
-        //    darray = disbalanceVector.ToArray();
-        //    double[,] rarray = new double[countOfThreads, countOfThreads];
-        //    for (int i = 0; i < incidenceMatrix.RowCount; i++)
-        //        for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
-        //            rarray[i, j] = 0.0;
-        //    for (int i = 0; i < incidenceMatrix.RowCount; i++)
-        //        for (int j = 0; j < 1; j++)
-        //            rarray[i, j] = darray[i];
-
-        //    transposedDisbalance = DenseVector.OfArray()
-        //    //    for (int i = 0; i < incidenceMatrix.RowCount; i++)
-        //    //for (int j = 0; j < 1; j++)
-        //    //    transposedDisbalance[i,j] = darray[i];// disbalanceVector[i];
-
-        //    transposedIncedence = (DenseMatrix)incidenceMatrix.Transpose();//at
-
-        //    V = (DenseMatrix)(incidenceMatrix * xSigma*transposedIncedence);//V
-        //    double[,] varray = new double[countOfThreads, countOfThreads];
-        //    varray = V.ToArray();
-        //    double[,] pinv = varray.PseudoInverse();
-        //    V = DenseMatrix.OfArray(pinv);
-        //    double gt = disbalanceVector * transposedDisbalance * V;
-        //    double alpha = 0.05;
-        //    int DegreeOfFreedom = incidenceMatrix.RowCount;
-        //    var invchisq = new InverseChiSquareDistribution(DegreeOfFreedom);
-        //    double GT_limit = invchisq.InverseDistributionFunction(1 - alpha);
-        //    return gt;
-        //}
+        }      
     }
 }
