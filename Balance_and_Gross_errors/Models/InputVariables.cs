@@ -13,8 +13,6 @@ namespace Balance_and_Gross_errors.Models
         public string name { get; set; }
 
         public double measured { get; set; }
-        //public Constraints metrologicRange { get;  set; }
-        //public Constraints technologicRange { get;  set; }
         public double metrologicUpperBound; 
         public double MetrologicUpperBound
         {
@@ -85,11 +83,6 @@ namespace Balance_and_Gross_errors.Models
 
         public bool isMeasured { get; set; }
         public bool isExcluded { get; set; }
-        public bool useTechnologic { get; set; }
-        //public InputVariables()
-        //{
-        //    metrologicRange = new Constraints();
-        //    technologicRange = new Constraints();
-        //}           
+        public bool useTechnologic { get; set; }        
     }
 }
