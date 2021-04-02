@@ -42,14 +42,11 @@ namespace Balance_and_Gross_errors.Solverdir
             
             this.inputData = balanceInput;
             countOfThreads = balanceInput.BalanceInputVariables.Count();// Инициализация количества потоков
-            double[] tol = new double[countOfThreads];
-            for (int i = 0; i < countOfThreads; i++)
-                tol[i] = i + 1;
-            measureIndicator = SparseMatrix.OfDiagonalArray(countOfThreads, countOfThreads,tol);
             Graph graph = new Graph(balanceInput);
             incidenceMatrix = SparseMatrix.OfArray(graph.getIncidenceMatrix(balanceInput));// Матрица инцидентности
             // Инициализация вектора измеренных значений ( x0 )
             measuredValues = new SparseVector(countOfThreads);
+            double[] tol = new double[countOfThreads];
             // Инициализация вектора верхних ограничений вектора x
             metrologicRangeUpperBound = new DenseVector(countOfThreads);
             technologicRangeUpperBound = new DenseVector(countOfThreads);
@@ -93,7 +90,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 absTolerance[i] = variables.tolerance;
             }
             measureIndicator = SparseMatrix.OfDiagonalArray(countOfThreads, countOfThreads, measIndicator);
-            standardDeviation = SparseMatrix.OfDiagonalArray(countOfThreads, countOfThreads,tol);
+            standardDeviation = SparseMatrix.OfDiagonalArray(countOfThreads, countOfThreads, tol);
 
             H = new SparseMatrix(countOfThreads, countOfThreads);
             H = measureIndicator * standardDeviation;
