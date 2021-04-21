@@ -10,7 +10,10 @@ namespace Balance_and_Gross_errors.Models
         public double DisbalanceOriginal { get; set; }
         public double Disbalance { get; set; }
 
-        private List<OutputVariables> balanceOutputVariables;
+        public double GlobaltestValue { get; set; }
+        public string Status { get; set; }
+
+        public List<OutputVariables> balanceOutputVariables;
         public BalanceOutput()
         {
             this.balanceOutputVariables = new List<OutputVariables>();

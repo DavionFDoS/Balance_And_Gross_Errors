@@ -16,20 +16,8 @@ namespace Balance_and_Gross_errors.Controllers
     [Produces("application/json")]
     public class InputVariablesController : ControllerBase
     {
-
-        // POST: InputVariablesController/aa
-        //[HttpPost]
-        //public BalanceOutput GetBalance(BalanceInput input)
-        //{
-        //    BalanceOutput balanceOutput = new BalanceOutput();
-        //    balanceOutput.BalanceOutputVariables.Add(new OutputVariables());
-        //    return balanceOutput;
-        //}
-
-
-        // POST: InputVariablesController/Create
         [HttpPost]
-        public async Task<Responce> GlobalTest(BalanceInput input)
+        public async Task<BalanceOutput> GetBalance(BalanceInput input)
         {
             return await Task.Run(() =>
             {
@@ -37,21 +25,14 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    var output = solver.GTR;
-                    var output1 = solver.sol;
-                    return new Responce
-                    {
-                        Type = "result",
-                        Data = output,
-                        Data1 = Array.ConvertAll<double, object>(output1, a=>(object)a)
-                    };
+                    return solver.balanceOutput;
+
                 }
                 catch (Exception e)
                 {
-                    return new Responce
+                    return new BalanceOutput
                     {
-                        Type = "error",
-                        Data = e.Message,
+                        Status = e.Message,
                     };
                 }
             });

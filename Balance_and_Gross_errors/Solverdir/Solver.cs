@@ -34,6 +34,8 @@ namespace Balance_and_Gross_errors.Solverdir
         public double DisbalanceOriginal;
         public double Disbalance;
         public double[] reconciledValuesArray;
+        public BalanceOutput balanceOutput;
+        public List<OutputVariables> balanceOutputVariables;
         private DenseVector absTolerance;                //вектор абсолютной погрешности
 
         public double[] sol;
@@ -178,16 +180,25 @@ namespace Balance_and_Gross_errors.Solverdir
                 sol[i] = solution[i];
             }
                 
-            BalanceOutput balanceOutput = new BalanceOutput();
-            List<OutputVariables> balanceOutputVariables = new List<OutputVariables>();
+            balanceOutput = new BalanceOutput();
+            balanceOutputVariables = new List<OutputVariables>();
             for (int i = 0; i < solution.Length; i++)
             {
                 InputVariables outputVariable = inputData.BalanceInputVariables[i];
-                balanceOutputVariables.Add(new OutputVariables() { id = outputVariable.id, name = outputVariable.name, value = solution[i],source = outputVariable.sourceId, target = outputVariable.destinationId });
+                balanceOutputVariables.Add(new OutputVariables() 
+                { 
+                    id = outputVariable.id, 
+                    name = outputVariable.name, 
+                    value = solution[i],
+                    source = outputVariable.sourceId, 
+                    target = outputVariable.destinationId 
+                });
             }
-            balanceOutput.BalanceOutputVariables = balanceOutputVariables;
+            balanceOutput.balanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;
+            balanceOutput.GlobaltestValue = GTR;
+            balanceOutput.Status = "Success";
         }
         
         public double GlobalTest()
