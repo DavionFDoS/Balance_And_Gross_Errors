@@ -25,6 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
+                    solver.Balance();
                     return solver.balanceOutput;
 
                 }
@@ -33,6 +34,81 @@ namespace Balance_and_Gross_errors.Controllers
                     return new BalanceOutput
                     {
                         Status = e.Message,
+                    };
+                }
+            });
+        }
+
+        [HttpPost("GLR")]
+        public async Task<GlrRes> GlrTest(BalanceInput input)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // Решение задачи
+                    Solver solver = new Solver(input);
+                    var (root, flows) = solver.GlrPrep();
+                    var nodes = root.Where(x => x.IsLeaf);
+                    var results = new List<Glr>();
+
+                    foreach (var node in nodes)
+                    {
+                        var flowerrors = new List<Flow>();
+                        var flowCorrections = new List<InputVariables>();
+                        foreach (var flow in node.Item.Flows)
+                        {
+                            var (i, j) = flow;
+
+                            var newFlow = new Flow($"Соединяет узлы: {i+1} -> {j+1}");
+
+                            var existingFlowIdx = flows.FindIndex(x => x.Input == i && x.Output == j);
+                            if (existingFlowIdx != -1)
+                            {
+                                var (_, _, existingFlow) = flows[existingFlowIdx];
+
+                                newFlow.Id =  input.BalanceInputVariables[existingFlow].id;
+                                newFlow.Name = "Поток " + input.BalanceInputVariables[existingFlow].name;
+
+                                var variable = new InputVariables
+                                {
+                                    id = Guid.NewGuid().ToString(),
+                                    sourceId = input.BalanceInputVariables[i].id,
+                                    destinationId = input.BalanceInputVariables[j].id,
+                                    name = input.BalanceInputVariables[existingFlow].name + " Дополнительный поток",
+                                    measured = 0.0000,
+                                    metrologicLowerBound = input.BalanceInputVariables[existingFlow].metrologicLowerBound,
+                                    metrologicUpperBound = input.BalanceInputVariables[existingFlow].metrologicUpperBound,
+                                    technologicLowerBound= input.BalanceInputVariables[existingFlow].technologicLowerBound,
+                                    technologicUpperBound = input.BalanceInputVariables[existingFlow].technologicUpperBound,
+                                    tolerance = input.BalanceInputVariables[existingFlow].tolerance,
+                                    isMeasured = true,
+                                };
+
+                                flowCorrections.Add(variable);
+                            }
+
+                            flowerrors.Add(newFlow);
+                        }
+                        results.Add(new Glr
+                        {
+                            FlowErrors = flowerrors,
+                            FlowCorrections = flowCorrections,
+                            GlobalTestValue = node.Item.GlobalTestValue
+                        });
+                    }
+
+                    return new GlrRes
+                    {
+                        Data = results
+                    };
+
+                }
+                catch (Exception e)
+                {
+                    return new GlrRes
+                    {
+                        Data = e.Message,
                     };
                 }
             });

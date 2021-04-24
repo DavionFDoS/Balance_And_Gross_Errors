@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace Balance_and_Gross_errors.Models
 {
-    public class Responce
+    public class GlrRes
     {
-        public string Type { get; set; }
         public object Data { get; set; }
-        public object[] Data1 { get; set; }
     }
 }

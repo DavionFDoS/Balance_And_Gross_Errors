@@ -13,7 +13,7 @@ namespace UnitTests
         [TestMethod]
         public void TestGTPost()
         {
-            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance2\Balance_And_Gross_Errors\UnitTests\Input.json"));
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance3\Balance_And_Gross_Errors\UnitTests\Input.json"));
 
             var expected = 0.1552143053428158;
 
@@ -26,7 +26,7 @@ namespace UnitTests
         [TestMethod]
         public void TestBalancePost()
         {
-            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance2\Balance_And_Gross_Errors\UnitTests\Input.json"));
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance3\Balance_And_Gross_Errors\UnitTests\Input.json"));
 
             double[] expected = new[] { 
                 10.055612418500504,
