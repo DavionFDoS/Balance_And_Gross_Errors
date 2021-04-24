@@ -13,20 +13,20 @@ namespace UnitTests
         [TestMethod]
         public void TestGTPost()
         {
-            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance3\Balance_And_Gross_Errors\UnitTests\Input.json"));
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\Input.json"));
 
             var expected = 0.1552143053428158;
 
             var controller = new InputVariablesController();
             var result = controller.GetBalance(inputData).Result;
             Assert.AreEqual("Success", result.Status);
-            Assert.AreEqual(expected, result.Data);
+            Assert.AreEqual(expected, result.GlobaltestValue);
         }
 
         [TestMethod]
         public void TestBalancePost()
         {
-            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"F:\Balance3\Balance_And_Gross_Errors\UnitTests\Input.json"));
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\Input.json"));
 
             double[] expected = new[] { 
                 10.055612418500504,
@@ -39,12 +39,32 @@ namespace UnitTests
             };
 
             var controller = new InputVariablesController();
-            var result = controller.GlobalTest(inputData).Result;
-            Assert.AreEqual("result", result.Type);
+            var result = controller.GetBalance(inputData).Result;
+            Assert.AreEqual("Success", result.Status);
             for (var i = 0; i < expected.Length; i++)
             {
-                Assert.AreEqual(expected[i], Array.ConvertAll<object, double>(result.Data1, a => (double)a)[i], 0.001);
+                Assert.AreEqual(expected[i], result.BalanceOutputVariables[i].value, 0.001);
             }
+        }
+        
+        [TestMethod]
+        public void TestModelCorrectnessMetro()
+        {
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\MetrologicBoundsError.json"));
+
+            var controller = new InputVariablesController();
+            var result = controller.GetBalance(inputData).Result;
+            Assert.AreEqual("MetrologicBounds are incorrect", result.Status);
+        }
+        
+        [TestMethod]
+        public void TestModelCorrectnessTechno()
+        {
+            var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\TechnologicBoundsError.json"));
+
+            var controller = new InputVariablesController();
+            var result = controller.GetBalance(inputData).Result;
+            Assert.AreEqual("TechnologicBounds are incorrect", result.Status);
         }
     }
 }

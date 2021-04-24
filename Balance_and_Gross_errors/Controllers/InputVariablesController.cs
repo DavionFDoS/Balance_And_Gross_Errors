@@ -25,7 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.Balance();
+                    solver.Balance();             
                     return solver.balanceOutput;
 
                 }
@@ -35,6 +35,7 @@ namespace Balance_and_Gross_errors.Controllers
                     {
                         Status = e.Message,
                     };
+                    
                 }
             });
         }

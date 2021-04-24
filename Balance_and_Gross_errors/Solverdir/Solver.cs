@@ -87,9 +87,14 @@ namespace Balance_and_Gross_errors.Solverdir
                 // Определение вектора верхних ограничений вектора x
                 metrologicRangeUpperBound[i] = variables.metrologicUpperBound;
                 technologicRangeUpperBound[i] = variables.technologicUpperBound;
+
+                
                 // Определение вектора нижних ограничений вектора x
                 metrologicRangeLowerBound[i] = variables.metrologicLowerBound;
                 technologicRangeLowerBound[i] = variables.technologicLowerBound;
+
+                if (metrologicRangeLowerBound[i] > metrologicRangeUpperBound[i]) throw new ApplicationException("MetrologicBounds are incorrect");
+                if (technologicRangeLowerBound[i] > technologicRangeUpperBound[i]) throw new ApplicationException("TechnologicBounds are incorrect");
                 absTolerance[i] = variables.tolerance;
             }
             measureIndicator = SparseMatrix.OfDiagonalArray(countOfThreads, countOfThreads, measIndicator);
