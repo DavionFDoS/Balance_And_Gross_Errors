@@ -18,8 +18,8 @@ namespace UnitTests
             var expected = 0.1552143053428158;
 
             var controller = new InputVariablesController();
-            var result = controller.GlobalTest(inputData).Result;
-            Assert.AreEqual("result", result.Type);
+            var result = controller.GetBalance(inputData).Result;
+            Assert.AreEqual("Success", result.Status);
             Assert.AreEqual(expected, result.Data);
         }
 
