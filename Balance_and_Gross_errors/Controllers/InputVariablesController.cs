@@ -38,8 +38,34 @@ namespace Balance_and_Gross_errors.Controllers
                 }
             });
         }
+       
+            [HttpPost("Gt")]
+            public async Task<GlrRes> Gtest(BalanceInput input)
+            {
+                return await Task.Run(() =>
+                {
+                    try
+                    {
+                        // Решение задачи
+                        Solver solver = new Solver(input);
+                        var ab = solver.GTR;
+                        return new GlrRes
+                        {
+                            Data = ab
+                        };
 
-        [HttpPost("GLR")]
+                    }
+                    catch (Exception e)
+                    {
+                        return new GlrRes
+                        {
+                            Data = e.Message,
+                        };
+                    }
+                });
+            }
+
+            [HttpPost("GLR")]
         public async Task<GlrRes> GlrTest(BalanceInput input)
         {
             return await Task.Run(() =>
@@ -58,9 +84,9 @@ namespace Balance_and_Gross_errors.Controllers
                         var flowCorrections = new List<InputVariables>();
                         foreach (var flow in node.Item.Flows)
                         {
-                            var (i, j) = flow;
+                            var (i, j,k) = flow;
 
-                            var newFlow = new Flow($"Соединяет узлы: {i+1} -> {j+1}");
+                            var newFlow = new Flow($"Соединяет узлы: {input.BalanceInputVariables[i].name} -> {input.BalanceInputVariables[j].name}");
 
                             var existingFlowIdx = flows.FindIndex(x => x.Input == i && x.Output == j);
                             if (existingFlowIdx != -1)
@@ -76,7 +102,8 @@ namespace Balance_and_Gross_errors.Controllers
                                     sourceId = input.BalanceInputVariables[i].id,
                                     destinationId = input.BalanceInputVariables[j].id,
                                     name = input.BalanceInputVariables[existingFlow].name + " Дополнительный поток",
-                                    measured = 0.0000,
+                                    measured = input.BalanceInputVariables[existingFlow].measured,
+                                    correction = (input.BalanceInputVariables[existingFlow].measured + solver.corr[existingFlow])/2,
                                     metrologicLowerBound = input.BalanceInputVariables[existingFlow].metrologicLowerBound,
                                     metrologicUpperBound = input.BalanceInputVariables[existingFlow].metrologicUpperBound,
                                     technologicLowerBound= input.BalanceInputVariables[existingFlow].technologicLowerBound,

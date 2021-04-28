@@ -23,6 +23,7 @@ namespace Balance_and_Gross_errors.Models
 
         public bool isMeasured { get; set; }
         public bool isExcluded { get; set; }
-        public bool useTechnologic { get; set; }        
+        public double correction { get; set; }
+        //public bool useTechnologic { get; set; }        
     }
 }
