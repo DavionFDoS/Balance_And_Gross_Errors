@@ -112,39 +112,39 @@ namespace Balance_and_Gross_errors.Solverdir
 
             for (var j = 0; j < measuredValues.ToArray().Length; j++)
             {
-                //bool flag = inputData.BalanceInputVariables[j].useTechnologic;
-                //if (flag == true)
-                //{
+                bool flag = inputData.BalanceInputVariables[j].useTechnologic;
+                if (flag == true)
+                {
                     constraints.Add(new LinearConstraint(1)
-                    {
-                        VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-                        Value = inputData.BalanceInputVariables[j].technologicLowerBound
-                    });
+                {
+                    VariablesAtIndices = new[] { j },
+                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                    Value = inputData.BalanceInputVariables[j].technologicLowerBound
+                });
 
-                    constraints.Add(new LinearConstraint(1)
-                    {
-                        VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
-                        Value = inputData.BalanceInputVariables[j].technologicUpperBound
-                    });
-               // }
-                //else
-                //{
-                    constraints.Add(new LinearConstraint(1)
-                    {
-                        VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-                        Value = inputData.BalanceInputVariables[j].metrologicLowerBound
-                    });
+                constraints.Add(new LinearConstraint(1)
+                {
+                    VariablesAtIndices = new[] { j },
+                    ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                    Value = inputData.BalanceInputVariables[j].technologicUpperBound
+                });
+            }
+                else
+            {
+                constraints.Add(new LinearConstraint(1)
+                {
+                    VariablesAtIndices = new[] { j },
+                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                    Value = inputData.BalanceInputVariables[j].metrologicLowerBound
+                });
 
-                    constraints.Add(new LinearConstraint(1)
-                    {
-                        VariablesAtIndices = new[] { j },
-                        ShouldBe = ConstraintType.LesserThanOrEqualTo,
-                        Value = inputData.BalanceInputVariables[j].metrologicUpperBound
-                    });
-                //}
+                constraints.Add(new LinearConstraint(1)
+                {
+                    VariablesAtIndices = new[] { j },
+                    ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                    Value = inputData.BalanceInputVariables[j].metrologicUpperBound
+                });
+                }
             }
             //Ограничения для решения задачи баланса
             for (var j = 0; j < reconciledValues.ToArray().Length; j++)
@@ -246,6 +246,20 @@ namespace Balance_and_Gross_errors.Solverdir
 
             return result[0] / chi;
         }
+        public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum)>) GlrPrep()
+        {
+            var x0 = measuredValues.ToArray();
+            var a = incidenceMatrix.ToArray();
+            var temp = new SparseVector(countOfThreads);
+            for (int i = 0; i < countOfThreads; i++)
+            {
+                temp[i] = measureIndicator[i, i];
+            }
+            var measurability = temp.ToArray();
+            var tolerance = absTolerance.ToArray();
+            var GLR = StartGlr(x0, a, measurability, tolerance);
+            return GLR;
+        }
         public static ICollection<(int Input, int Output, int FlowNum)> GetExistingFlows(double[,] a)
         {
             var flows = new List<(int, int, int)>();
@@ -266,101 +280,62 @@ namespace Balance_and_Gross_errors.Solverdir
 
             return flows;
         }
-        public /*static*/ (double[,], List<(int Input, int Output, int FlowNum)>) GlrTest(double[] x0, double[,] a, double[] measurability, double[] tolerance,
+        public (double[,], List<(int Input, int Output, int FlowNum)>) GlrTest(double[] x0, double[,] a, double[] measurability, double[] tolerance,
             List<(int, int, int)> flows, double globalTest)
         {
             var nodesCount = a.GetLength(0);
             corr = new double[countOfThreads];
             var glrTable = new double[nodesCount, nodesCount];
-            
-            
-            if (flows != null)
+
+            foreach (var flow in flows)
             {
-                foreach (var flow in flows)
+                var sum = 0.0;
+                var correction = 0.0;
+                var (i, j, l) = flow;
+
+                // Добавляем новый поток в схеме
+                var aColumn = new double[nodesCount];
+                aColumn[i] = -1;
+                aColumn[j] = 1;
+
+                var aNew = a.InsertColumn(aColumn);
+
+                var aRow = new double[x0.Length];
+                for (int k = 0; k < x0.Length; k++)
+                    aRow[k] = a[i, k];
+                for (int k = 0; k < x0.Length; k++)
                 {
-                    var sum = 0.0;
-                    var correction = 0.0;
-                    var (i, j, l) = flow;
-
-                    // Добавляем новый поток
-                    var aColumn = new double[nodesCount];
-                    aColumn[i] = -1;
-                    aColumn[j] = 1;
-
-                    var aNew = a.InsertColumn(aColumn);
-                    
-                    var aRow = new double[x0.Length];
-                    for (int k = 0; k < x0.Length; k++)
-                        aRow[k] = a[i, k];
-                    for (int k = 0; k < x0.Length; k++)
+                    if (k == l)
+                        continue;
+                    else
                     {
-                        if (k == l)
-                            continue;
-                        else
-                        {
-                            if (aRow[k] == 1)
-                                sum += x0[k];
-                            else if (aRow[k] == -1)
-                                sum -= x0[k];
-                        }
+                        if (aRow[k] == 1)
+                            sum += x0[k];
+                        else if (aRow[k] == -1)
+                            sum -= x0[k];
                     }
-                    if (sum > 0.0) correction += sum;
-                    else correction -= sum;
-                    corr[l] = correction;
-                    var x0New = x0.Append(correction).ToArray();
-
-                    var measurabilityNew = measurability.Append(0).ToArray();
-                    var toleranceNew = tolerance.Append(0).ToArray();
-
-                    // Считаем тест и находим разницу
-                    glrTable[i, j] = globalTest - StartGlobalTest(x0New, aNew, measurabilityNew, toleranceNew);
                 }
+                if (sum > 0.0) correction += sum;
+                else correction -= sum;
+                corr[l] = correction;
+                var x0New = x0.Append(0).ToArray();
+
+                var measurabilityNew = measurability.Append(0).ToArray();
+                var toleranceNew = tolerance.Append(0).ToArray();
+
+                // Считаем тест и находим разницу
+                glrTable[i, j] = globalTest - StartGlobalTest(x0New, aNew, measurabilityNew, toleranceNew);
             }
-            //else
-            //{
-            //    for (var i = 0; i < nodesCount; i++)
-            //    {
-            //        for (var j = i + 1; j < nodesCount; j++)
-            //        {
-            //            // Добавляем новый поток
-            //            var aColumn = new double[nodesCount];
-            //            aColumn[i] = -1;
-            //            aColumn[j] = 1;
 
-            //            var aNew = a.InsertColumn(aColumn);
-            //            var x0New = x0.Append(0).ToArray();
-            //            var measurabilityNew = measurability.Append(0).ToArray();
-            //            var toleranceNew = tolerance.Append(0).ToArray();
 
-            //            // Считаем тест и находим разницу
-            //            glrTable[i, j] = globalTest - StartGlobalTest(x0New, aNew, measurabilityNew, toleranceNew);
-            //        }
-            //    }
-            //}
-
-            return (glrTable,flows);
+            return (glrTable, flows);
         }
-        public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum)>) GlrPrep()
-        {
-            var x0 = measuredValues.ToArray();
-            var a = incidenceMatrix.ToArray();
-            var temp = new SparseVector(countOfThreads);
-            for (int i = 0; i < countOfThreads; i++)
-            {
-                temp[i] = measureIndicator[i, i];
-            }
-            var measurability = temp.ToArray();
-            var tolerance = absTolerance.ToArray();
-            var GLR = StartGlr(x0, a, measurability, tolerance);
-            return GLR;
-        }
+
         public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum)>) StartGlr(double[] x0, double[,] a, double[] measurability, double[] tolerance)
         {
 
             var flows = GetExistingFlows(a).ToList();
             var nodesCount = a.Rows();
-            //var sum = 0.0;
-            //var correction = 0.0;
             var rootNode = new MutableEntityTreeNode<Guid, TreeElement>(x => x.Id, new TreeElement());
             var analyzingNode = rootNode;
             while (analyzingNode != null)
@@ -369,7 +344,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 var newTolerance = tolerance;
                 var newA = a;
                 var newX0 = x0;
-                //Добавляем новые потоки
+                //Добавляем уже сущ. потоки от родителя
                 foreach (var (newI, newJ, newNum) in analyzingNode.Item.Flows)
                 {
                     var aColumn = new double[nodesCount];
@@ -378,23 +353,22 @@ namespace Balance_and_Gross_errors.Solverdir
 
                     newMeasurability = newMeasurability.Append(0).ToArray();
                     newTolerance = newTolerance.Append(0).ToArray();
-                   
+
                     newX0 = newX0.Append(0).ToArray();
                     newA = newA.InsertColumn(aColumn);
                 }
                 //Значение глобального теста
-                var gTest = StartGlobalTest(newX0, newA, newMeasurability,
-                    newTolerance);
+                var gTest = StartGlobalTest(newX0, newA, newMeasurability, newTolerance);
 
                 //GLR
-                var (glr,fl) = GlrTest(newX0, newA, newMeasurability,
-                    newTolerance, flows, gTest);
+                var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
-                if (gTest >= 1)
+                if (gTest >= 0.01)
                 {
                     var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
                     analyzingNode = analyzingNode.AddChild(node);
                     node.Flows.Add((i, j, fl.FindIndex(x => x.Input == i && x.Output == j)));
+
                 }
                 else
                 {

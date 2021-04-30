@@ -101,7 +101,7 @@ namespace Balance_and_Gross_errors.Controllers
                                     id = Guid.NewGuid().ToString(),
                                     sourceId = input.BalanceInputVariables[i].id,
                                     destinationId = input.BalanceInputVariables[j].id,
-                                    name = input.BalanceInputVariables[existingFlow].name + " Дополнительный поток",
+                                    name = input.BalanceInputVariables[existingFlow].name + " (Доп. поток)",
                                     measured = input.BalanceInputVariables[existingFlow].measured,
                                     correction = (input.BalanceInputVariables[existingFlow].measured + solver.corr[existingFlow])/2,
                                     metrologicLowerBound = input.BalanceInputVariables[existingFlow].metrologicLowerBound,
