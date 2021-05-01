@@ -12,6 +12,7 @@ using MathNet.Numerics.Distributions;
 using System.IO;
 using Accord.Math.Optimization;
 using TreeCollections;
+using Gurobi;
 
 namespace Balance_and_Gross_errors.Solverdir
 {
@@ -105,7 +106,7 @@ namespace Balance_and_Gross_errors.Solverdir
             GTR = GlobalTest();
             //Balance();
         }
-        public void Balance()
+        public void BalanceAccord()
         {
             var func = new QuadraticObjectiveFunction(H.ToArray(), dVector.ToArray());
             var constraints = new List<LinearConstraint>();
@@ -169,7 +170,9 @@ namespace Balance_and_Gross_errors.Solverdir
             }
 
             var solver = new GoldfarbIdnani(func, constraints);
+            DateTime CalculationTimeStart = DateTime.Now;
             if (!solver.Minimize()) throw new ApplicationException("Failed to solve balance task.");
+            DateTime CalculationTimeFinish = DateTime.Now;
             double disbalanceOriginal = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
             double disbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(solver.Solution))).Subtract(reconciledValues).ToArray().Euclidean();
             DisbalanceOriginal = disbalanceOriginal;
@@ -196,6 +199,120 @@ namespace Balance_and_Gross_errors.Solverdir
                     target = outputVariable.destinationId
                 });
             }
+            balanceOutput.CalculationTime = (CalculationTimeFinish - CalculationTimeStart).TotalSeconds;
+            balanceOutput.balanceOutputVariables = balanceOutputVariables;
+            balanceOutput.DisbalanceOriginal = disbalanceOriginal;
+            balanceOutput.Disbalance = disbalance;
+            balanceOutput.GlobaltestValue = GTR;
+            balanceOutput.Status = "Success";
+        }
+
+        public void BalanceGurobi()
+        {
+            GRBEnv env = new GRBEnv();
+            GRBModel model = new GRBModel(env);
+
+            // Create variables
+            //GRBVar[] varsMetrologic = new GRBVar[measuredValues.ToArray().Length];
+            //for (int i = 0; i < varsMetrologic.Length; i++)
+            //{
+            //    varsMetrologic[i] = model.AddVar(metrologicRangeLowerBound[i], metrologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+            //}
+
+            GRBVar[] varsTechnologic = new GRBVar[measuredValues.ToArray().Length];
+            for (int i = 0; i < varsTechnologic.Length; i++)
+            {
+                varsTechnologic[i] = model.AddVar(technologicRangeLowerBound[i], technologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+            }
+
+            // Set objective
+
+            //GRBQuadExpr objMetroologic = new GRBQuadExpr();
+            //for (int i = 0; i < varsMetrologic.Length; i++)
+            //{
+            //    objMetroologic.AddTerm(H[i, i], varsMetrologic[i], varsMetrologic[i]);
+            //}
+            //for (int i = 0; i < varsMetrologic.Length; i++)
+            //{
+            //    objMetroologic.AddTerm(dVector[i], varsMetrologic[i]);
+            //}
+            //model.SetObjective(objMetroologic);
+
+            GRBQuadExpr objTechnologic = new GRBQuadExpr();
+            for (int i = 0; i < varsTechnologic.Length; i++)
+            {
+                objTechnologic.AddTerm(H[i, i] / 2.0, varsTechnologic[i], varsTechnologic[i]);
+            }
+            for (int i = 0; i < varsTechnologic.Length; i++)
+            {
+                objTechnologic.AddTerm(dVector[i], varsTechnologic[i]);
+            }
+            model.SetObjective(objTechnologic);
+
+            // Add constraints
+
+            //GRBLinExpr expr;
+            //for (int i = 0; i < incidenceMatrix.RowCount; i++)
+            //{
+            //    expr = new GRBLinExpr();
+            //    for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
+            //    {
+            //        expr.AddTerm(incidenceMatrix[i, j], varsMetrologic[j]);
+            //    }
+            //    model.AddConstr(expr, GRB.EQUAL, 0.0, "c" + i);
+            //}
+
+            GRBLinExpr expr;
+            for (int i = 0; i < incidenceMatrix.RowCount; i++)
+            {
+                expr = new GRBLinExpr();
+                for (int j = 0; j < incidenceMatrix.ColumnCount; j++)
+                {
+                    expr.AddTerm(incidenceMatrix[i, j], varsTechnologic[j]);
+                }
+                model.AddConstr(expr, GRB.EQUAL, 0.0, "c" + i);
+            }
+
+
+
+            // Optimize model
+            DateTime CalculationTimeStart = DateTime.Now;
+            model.Optimize();
+            DateTime CalculationTimeFinish = DateTime.Now;
+            //double[] results = new double[varsMetrologic.Length];
+            //for (int i = 0; i < results.Length; i++)
+            //{
+            //    results[i] = varsMetrologic[i].Get(GRB.DoubleAttr.X);
+            //}
+
+            double[] results = new double[varsTechnologic.Length];
+            for (int i = 0; i < results.Length; i++)
+            {
+                results[i] = varsTechnologic[i].Get(GRB.DoubleAttr.X);
+            }
+
+            model.Dispose();
+            env.Dispose();
+
+            double disbalanceOriginal = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
+            double disbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(results))).Subtract(reconciledValues).ToArray().Euclidean();
+            DisbalanceOriginal = disbalanceOriginal;
+            Disbalance = disbalance;
+            balanceOutput = new BalanceOutput();
+            balanceOutputVariables = new List<OutputVariables>();
+            for (int i = 0; i < results.Length; i++)
+            {
+                InputVariables outputVariable = inputData.BalanceInputVariables[i];
+                balanceOutputVariables.Add(new OutputVariables()
+                {
+                    id = outputVariable.id,
+                    name = outputVariable.name,
+                    value = results[i],
+                    source = outputVariable.sourceId,
+                    target = outputVariable.destinationId
+                });
+            }
+            balanceOutput.CalculationTime = (CalculationTimeFinish - CalculationTimeStart).TotalSeconds;
             balanceOutput.balanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;

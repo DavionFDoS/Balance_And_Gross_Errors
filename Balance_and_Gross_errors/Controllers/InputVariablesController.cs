@@ -16,8 +16,8 @@ namespace Balance_and_Gross_errors.Controllers
     [Produces("application/json")]
     public class InputVariablesController : ControllerBase
     {
-        [HttpPost]
-        public async Task<BalanceOutput> GetBalance(BalanceInput input)
+        [HttpPost("AccordSolver")]
+        public async Task<BalanceOutput> GetBalanceAccord(BalanceInput input)
         {
             return await Task.Run(() =>
             {
@@ -25,7 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.Balance();
+                    solver.BalanceAccord();
                     return solver.balanceOutput;
 
                 }
@@ -38,8 +38,31 @@ namespace Balance_and_Gross_errors.Controllers
                 }
             });
         }
-       
-            [HttpPost("Gt")]
+
+        [HttpPost("GurobiSolver")]
+        public async Task<BalanceOutput> GetBalanceGurobi(BalanceInput input)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    // Решение задачи
+                    Solver solver = new Solver(input);
+                    solver.BalanceGurobi();
+                    return solver.balanceOutput;
+
+                }
+                catch (Exception e)
+                {
+                    return new BalanceOutput
+                    {
+                        Status = e.Message,
+                    };
+                }
+            });
+        }
+
+        [HttpPost("Gt")]
             public async Task<GlrRes> Gtest(BalanceInput input)
             {
                 return await Task.Run(() =>
