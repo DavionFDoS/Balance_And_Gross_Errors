@@ -209,8 +209,8 @@ namespace Balance_and_Gross_errors.Solverdir
         {
             GRBEnv env = new GRBEnv();
             GRBModel model = new GRBModel(env);
-            DateTime CalculationTimeStart= DateTime.Now;
-            DateTime CalculationTimeFinish = DateTime.Now;
+            DateTime CalculationTimeStart;
+            DateTime CalculationTimeFinish;
             double[] results = new double[measuredValues.ToArray().Length];
             if (inputData.balanceSettings.balanceSettingsConstraints == 0)
             {
