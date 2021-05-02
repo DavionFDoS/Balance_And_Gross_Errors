@@ -25,7 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.BalanceAccord();
+                    solver.BalanceAccord(input.balanceSettings);
                     return solver.balanceOutput;
 
                 }
@@ -48,7 +48,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.BalanceGurobi();
+                    solver.BalanceGurobi(input.balanceSettings);
                     return solver.balanceOutput;
 
                 }
@@ -63,32 +63,32 @@ namespace Balance_and_Gross_errors.Controllers
         }
 
         [HttpPost("Gt")]
-            public async Task<GlrRes> Gtest(BalanceInput input)
+        public async Task<GlrRes> Gtest(BalanceInput input)
+        {
+            return await Task.Run(() =>
             {
-                return await Task.Run(() =>
+                try
                 {
-                    try
-                    {
                         // Решение задачи
                         Solver solver = new Solver(input);
-                        var ab = solver.GTR;
-                        return new GlrRes
-                        {
-                            Data = ab
-                        };
-
-                    }
-                    catch (Exception e)
+                    var ab = solver.GTR;
+                    return new GlrRes
                     {
-                        return new GlrRes
-                        {
-                            Data = e.Message,
-                        };
-                    }
-                });
-            }
+                        Data = ab
+                    };
 
-            [HttpPost("GLR")]
+                }
+                catch (Exception e)
+                {
+                    return new GlrRes
+                    {
+                        Data = e.Message,
+                    };
+                }
+            });
+        }
+
+        [HttpPost("GLR")]
         public async Task<GlrRes> GlrTest(BalanceInput input)
         {
             return await Task.Run(() =>
@@ -97,7 +97,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    var (root, flows) = solver.GlrPrep();
+                    var (root, flows) = solver.StartGlr();
                     var nodes = root.Where(x => x.IsLeaf);
                     var results = new List<Glr>();
 
@@ -107,7 +107,7 @@ namespace Balance_and_Gross_errors.Controllers
                         var flowCorrections = new List<InputVariables>();
                         foreach (var flow in node.Item.Flows)
                         {
-                            var (i, j,k) = flow;
+                            var (i, j, k) = flow;
 
                             var newFlow = new Flow($"Соединяет узлы: {input.BalanceInputVariables[i].name} -> {input.BalanceInputVariables[j].name}");
 
@@ -116,7 +116,7 @@ namespace Balance_and_Gross_errors.Controllers
                             {
                                 var (_, _, existingFlow) = flows[existingFlowIdx];
 
-                                newFlow.Id =  input.BalanceInputVariables[existingFlow].id;
+                                newFlow.Id = input.BalanceInputVariables[existingFlow].id;
                                 newFlow.Name = "Поток " + input.BalanceInputVariables[existingFlow].name;
 
                                 var variable = new InputVariables
@@ -126,10 +126,10 @@ namespace Balance_and_Gross_errors.Controllers
                                     destinationId = input.BalanceInputVariables[j].id,
                                     name = input.BalanceInputVariables[existingFlow].name + " (Доп. поток)",
                                     measured = input.BalanceInputVariables[existingFlow].measured,
-                                    correction = (input.BalanceInputVariables[existingFlow].measured + solver.corr[existingFlow])/2,
+                                    correction = input.BalanceInputVariables[existingFlow].measured + solver.corr[existingFlow],
                                     metrologicLowerBound = input.BalanceInputVariables[existingFlow].metrologicLowerBound,
                                     metrologicUpperBound = input.BalanceInputVariables[existingFlow].metrologicUpperBound,
-                                    technologicLowerBound= input.BalanceInputVariables[existingFlow].technologicLowerBound,
+                                    technologicLowerBound = input.BalanceInputVariables[existingFlow].technologicLowerBound,
                                     technologicUpperBound = input.BalanceInputVariables[existingFlow].technologicUpperBound,
                                     tolerance = input.BalanceInputVariables[existingFlow].tolerance,
                                     isMeasured = true,
