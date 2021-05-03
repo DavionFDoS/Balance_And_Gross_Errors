@@ -212,7 +212,7 @@ namespace Balance_and_Gross_errors.Solverdir
             DateTime CalculationTimeStart;
             DateTime CalculationTimeFinish;
             double[] results = new double[measuredValues.ToArray().Length];
-            if (inputData.balanceSettings.balanceSettingsConstraints == 0)
+            if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
             {
                 //Create variables
                 GRBVar[] varsTechnologic = new GRBVar[measuredValues.ToArray().Length];
@@ -365,7 +365,124 @@ namespace Balance_and_Gross_errors.Solverdir
             // нормирование
             return result[0] / chi;
         }
-        
+        public BalanceOutput BalanceGurobiForGLR(double[] x0, double[,] a, double[,] h, double[] d, double[] technologicLowerBound, double[] technologicUpperBound, double[] metrologicLowerBound, double[] metrologicUpperBound)
+        {
+            try
+            {
+                GRBEnv env = new GRBEnv();
+                GRBModel model = new GRBModel(env);
+                DateTime CalculationTimeStart;
+                DateTime CalculationTimeFinish;
+                double[] results = new double[x0.Length];
+                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
+                {
+                    //Create variables
+                    GRBVar[] varsTechnologic = new GRBVar[a.Columns()];
+                    for (int i = 0; i < varsTechnologic.Length; i++)
+                    {
+                        varsTechnologic[i] = model.AddVar(technologicLowerBound[i], technologicUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+                    }
+                    //Set objective
+                    GRBQuadExpr objTechnologic = new GRBQuadExpr();
+                    for (int i = 0; i < varsTechnologic.Length; i++)
+                    {
+                        objTechnologic.AddTerm(h[i, i] / 2.0, varsTechnologic[i], varsTechnologic[i]);
+                    }
+                    for (int i = 0; i < varsTechnologic.Length; i++)
+                    {
+                        objTechnologic.AddTerm(d[i], varsTechnologic[i]);
+                    }
+                    model.SetObjective(objTechnologic);
+                    //Add constraints
+                    GRBLinExpr expr;
+                    for (int i = 0; i < a.Rows(); i++)
+                    {
+                        expr = new GRBLinExpr();
+                        for (int j = 0; j < a.Columns(); j++)
+                        {
+                            expr.AddTerm(a[i, j], varsTechnologic[j]);
+                        }
+                        model.AddConstr(expr, GRB.EQUAL, 0.0, "c" + i);
+                    }
+                    // Optimize model
+                    model.Optimize();
+                    //results = new double[varsTechnologic.Length];
+                    for (int i = 0; i < results.Length; i++)
+                    {
+                        results[i] = varsTechnologic[i].Get(GRB.DoubleAttr.X);
+                    }
+                }
+                else
+                {
+                    //Create variables
+                    GRBVar[] varsMetrologic = new GRBVar[a.Columns()];
+                    for (int i = 0; i < varsMetrologic.Length; i++)
+                    {
+                        varsMetrologic[i] = model.AddVar(metrologicLowerBound[i], metrologicUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+                    }
+                    //Set objective
+                    GRBQuadExpr objMetrologic = new GRBQuadExpr();
+                    for (int i = 0; i < varsMetrologic.Length; i++)
+                    {
+                        objMetrologic.AddTerm(h[i, i] / 2.0, varsMetrologic[i], varsMetrologic[i]);
+                    }
+                    for (int i = 0; i < varsMetrologic.Length; i++)
+                    {
+                        objMetrologic.AddTerm(d[i], varsMetrologic[i]);
+                    }
+                    model.SetObjective(objMetrologic);
+                    //Add constraints
+                    GRBLinExpr expr;
+                    for (int i = 0; i < a.Rows(); i++)
+                    {
+                        expr = new GRBLinExpr();
+                        for (int j = 0; j < a.Columns(); j++)
+                        {
+                            expr.AddTerm(a[i, j], varsMetrologic[j]);
+                        }
+                        model.AddConstr(expr, GRB.EQUAL, 0.0, "c" + i);
+                    }
+                    // Optimize model
+                    CalculationTimeStart = DateTime.Now;
+                    model.Optimize();
+                    CalculationTimeFinish = DateTime.Now;
+                    //results = new double[varsMetrologic.Length];
+                    for (int i = 0; i < results.Length; i++)
+                    {
+                        results[i] = varsMetrologic[i].Get(GRB.DoubleAttr.X);
+                    }
+                }
+
+                model.Dispose();
+                env.Dispose();
+
+                BalanceOutput outb = new BalanceOutput();
+                var balanceOutputVars = new List<OutputVariables>();
+                for (int i = 0; i < measuredValues.Count; i++)
+                {
+                    InputVariables outputVariable = inputData.BalanceInputVariables[i];
+                    balanceOutputVars.Add(new OutputVariables()
+                    {
+                        id = outputVariable.id,
+                        name = outputVariable.name,
+                        value = results[i],
+                        source = outputVariable.sourceId,
+                        target = outputVariable.destinationId
+                    });
+                }
+                outb.balanceOutputVariables = balanceOutputVars;
+                outb.GlobaltestValue = GTR;
+                outb.Status = "Success";
+                return outb;
+            }
+            catch (Exception e)
+            {
+                return new BalanceOutput
+                {
+                    Status = e.Message,
+                };
+            }
+        }
         public static ICollection<(int Input, int Output, int FlowNum)> GetExistingFlows(double[,] a)
         {
             var flows = new List<(int, int, int)>();
@@ -441,6 +558,11 @@ namespace Balance_and_Gross_errors.Solverdir
         {
             var x0 = measuredValues.ToArray();
             var a = incidenceMatrix.ToArray();
+            var metrU = metrologicRangeUpperBound.ToArray();
+            var metrL = metrologicRangeLowerBound.ToArray();
+            var techU = technologicRangeUpperBound.ToArray();
+            var techL = technologicRangeLowerBound.ToArray();
+            //var d = dVector.ToArray();
             var temp = new SparseVector(countOfThreads);
             for (int i = 0; i < countOfThreads; i++)
             {
@@ -459,6 +581,12 @@ namespace Balance_and_Gross_errors.Solverdir
                 var newTolerance = tolerance;
                 var newA = a;
                 var newX0 = x0;
+                var newmetrU = metrU;
+                var newmetrL = metrL;
+                var newtechU = techU;
+                var newtechL = techL;
+                var newh = H.ToArray();
+                var newD = dVector.ToArray();
                 //Добавляем уже сущ. потоки от родителя
                 foreach (var (newI, newJ, newNum) in analyzingNode.Item.Flows)
                 {
@@ -470,6 +598,19 @@ namespace Balance_and_Gross_errors.Solverdir
                     newTolerance = newTolerance.Append(0).ToArray();
 
                     newX0 = newX0.Append(0).ToArray();
+                    newmetrU = newmetrU.Append(metrologicRangeUpperBound[newNum]).ToArray();
+                    newmetrL = newmetrL.Append(metrologicRangeLowerBound[newNum]).ToArray();
+                    newtechU = newtechU.Append(technologicRangeUpperBound[newNum]).ToArray();
+                    newtechL = newmetrL.Append(technologicRangeLowerBound[newNum]).ToArray();
+                    var hColumn = new double[nodesCount + 1];
+                    var hRow = new double[newX0.Length];
+                    foreach (int elem in hColumn)
+                        hColumn[elem] = 0;
+                    foreach (int elem in hRow)
+                        hRow[elem] = 0;
+                    newh = newh.InsertColumn(hColumn);
+                    newh = newh.InsertRow(hRow);
+                    newD = newD.Append(0).ToArray();
                     newA = newA.InsertColumn(aColumn);
                 }
                 //Значение глобального теста
@@ -478,12 +619,29 @@ namespace Balance_and_Gross_errors.Solverdir
                 //GLR
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
-
-                if (gTest >= 0.01)
+                var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
+                if (gTest >= 1)
                 {
-                    var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
-                    analyzingNode = analyzingNode.AddChild(node);
-                    node.Flows.Add((i, j,fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
+                    if (check.Status == "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
+                    {
+                        var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
+                        analyzingNode = analyzingNode.AddChild(node);
+                        node.Flows.Add((i, j, fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
+                        node.metrologicLowerBound = metrologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.metrologicUpperBound = metrologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.technologicLowerBound = technologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.technologicUpperBound = technologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                    }
+                    if(check.Status != "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
+                    {
+                        var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
+                        analyzingNode = analyzingNode.AddChild(node);
+                        node.Flows.Add((i, j, fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
+                        node.metrologicLowerBound = metrologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.metrologicUpperBound = metrologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.technologicLowerBound = technologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.technologicUpperBound = technologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                    }
                 }
                 else
                 {
