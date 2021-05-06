@@ -264,7 +264,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 GRBQuadExpr objMetroologic = new GRBQuadExpr();
                 for (int i = 0; i < varsMetrologic.Length; i++)
                 {
-                    objMetroologic.AddTerm(H[i, i], varsMetrologic[i], varsMetrologic[i]);
+                    objMetroologic.AddTerm(H[i, i]/2.0, varsMetrologic[i], varsMetrologic[i]);
                 }
                 for (int i = 0; i < varsMetrologic.Length; i++)
                 {
