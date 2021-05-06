@@ -541,6 +541,10 @@ namespace Balance_and_Gross_errors.Solverdir
                 if (sum > 0.0) correction -= sum;
                 else correction += sum;
                 corr[l] = correction;
+                //if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
+                //    continue;
+                //if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
+                //    continue;
                 var x0New = x0.Append(0).ToArray();
 
                 var measurabilityNew = measurability.Append(0).ToArray();
@@ -620,7 +624,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
-                if (gTest >= 0.1)
+                if (gTest >= 0.05)
                 {
                     var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
                     var fname = inputData.BalanceInputVariables[flowIndex].name;
