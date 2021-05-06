@@ -338,7 +338,7 @@ namespace Balance_and_Gross_errors.Solverdir
             return GTR;
 
         }
-        public static double StartGlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
+        public /*static*/ double StartGlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
         {
             var aMatrix = SparseMatrix.OfArray(a);
             var aTransposedMatrix = SparseMatrix.OfMatrix(aMatrix.Transpose());
@@ -538,8 +538,8 @@ namespace Balance_and_Gross_errors.Solverdir
                             sum -= x0[k];
                     }
                 }
-                if (sum > 0.0) correction += sum;
-                else correction -= sum;
+                if (sum > 0.0) correction -= sum;
+                else correction += sum;
                 corr[l] = correction;
                 var x0New = x0.Append(0).ToArray();
 
@@ -620,27 +620,31 @@ namespace Balance_and_Gross_errors.Solverdir
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
-                if (gTest >= 1)
+                if (gTest >= 0.1)
                 {
+                    var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
+                    var fname = inputData.BalanceInputVariables[flowIndex].name;
                     if (check.Status == "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
                     {
                         var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
-                        node.Flows.Add((i, j, fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
-                        node.metrologicLowerBound = metrologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.metrologicUpperBound = metrologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.technologicLowerBound = technologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.technologicUpperBound = technologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.Flows.Add((i, j, flowIndex));
+                        node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
+                        node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
+                        node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
+                        node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
+                        inputData.BalanceInputVariables[flowIndex].metrologicLowerBound = corr[flowIndex] - tolerance[flowIndex];
+                        inputData.BalanceInputVariables[flowIndex].metrologicUpperBound = corr[flowIndex] + tolerance[flowIndex];
                     }
-                    if(check.Status != "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
+                    if (check.Status != "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
                     {
                         var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
                         node.Flows.Add((i, j, fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
-                        node.metrologicLowerBound = metrologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.metrologicUpperBound = metrologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.technologicLowerBound = technologicRangeLowerBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
-                        node.technologicUpperBound = technologicRangeUpperBound[fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum];
+                        node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
+                        node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
+                        node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
+                        node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
                     }
                 }
                 else
