@@ -69,8 +69,7 @@ namespace Balance_and_Gross_errors.Controllers
             {
                 try
                 {
-                        // Решение задачи
-                        Solver solver = new Solver(input);
+                    Solver solver = new Solver(input);
                     var ab = solver.GTR;
                     return new GlrRes
                     {
@@ -95,7 +94,6 @@ namespace Balance_and_Gross_errors.Controllers
             {
                 try
                 {
-                    // Решение задачи
                     Solver solver = new Solver(input);
                     var (root, flows) = solver.StartGlr();
                     var nodes = root.Where(x => x.IsLeaf);
@@ -107,17 +105,17 @@ namespace Balance_and_Gross_errors.Controllers
                         var flowCorrections = new List<InputVariables>();
                         foreach (var flow in node.Item.Flows)
                         {
-                            var (i, j, k) = flow;
+                            var (i, j, k, n) = flow;
 
-                            var newFlow = new Flow($"Соединяет узлы: {input.BalanceInputVariables[i].name} -> {input.BalanceInputVariables[j].name}");
+                            var newFlow = new Flow($"Соединяет узлы: {i} -> {j}");
 
                             var existingFlowIdx = flows.FindIndex(x => x.Input == i && x.Output == j);
                             if (existingFlowIdx != -1)
                             {
-                                var (_, _, existingFlow) = flows[existingFlowIdx];
+                                var (_, _, existingFlow,_) = flows[existingFlowIdx];
 
                                 newFlow.Id = input.BalanceInputVariables[existingFlow].id;
-                                newFlow.Name = "Поток " + input.BalanceInputVariables[existingFlow].name;
+                                newFlow.Name = "Поток: " + input.BalanceInputVariables[existingFlow].name;
 
                                 var variable = new InputVariables
                                 {

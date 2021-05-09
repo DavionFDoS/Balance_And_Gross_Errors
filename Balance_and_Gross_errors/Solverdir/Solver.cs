@@ -483,9 +483,9 @@ namespace Balance_and_Gross_errors.Solverdir
                 };
             }
         }
-        public static ICollection<(int Input, int Output, int FlowNum)> GetExistingFlows(double[,] a)
+        public /*static*/ ICollection<(int Input, int Output, int FlowNum, string FlowName)> GetExistingFlows(double[,] a)
         {
-            var flows = new List<(int, int, int)>();
+            var flows = new List<(int, int, int, string)>();
             for (var k = 0; k < a.Columns(); k++)
             {
                 var column = a.GetColumn(k);
@@ -497,14 +497,14 @@ namespace Balance_and_Gross_errors.Solverdir
                 {
                     continue;
                 }
-
-                flows.Add((i, j, k));
+                var fname = inputData.BalanceInputVariables[k].name;
+                flows.Add((i, j, k, fname));
             }
 
             return flows;
         }
-        public (double[,], List<(int Input, int Output, int FlowNum)>) GlrTest(double[] x0, double[,] a, double[] measurability, double[] tolerance,
-            List<(int, int, int)> flows, double globalTest)
+        public (double[,], List<(int Input, int Output, int FlowNum, string FlowName)>) GlrTest(double[] x0, double[,] a, double[] measurability, double[] tolerance,
+            List<(int, int, int, string)> flows, double globalTest)
         {
             var nodesCount = a.GetLength(0);
             corr = new double[countOfThreads];
@@ -514,7 +514,7 @@ namespace Balance_and_Gross_errors.Solverdir
             {
                 var sum = 0.0;
                 var correction = 0.0;
-                var (i, j, l) = flow;
+                var (i, j, l, n) = flow;
 
                 // Добавляем новый поток в схеме
                 var aColumn = new double[nodesCount];
@@ -558,7 +558,7 @@ namespace Balance_and_Gross_errors.Solverdir
             return (glrTable, flows);
         }
 
-        public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum)>) StartGlr()
+        public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum, string FlowName)>) StartGlr()
         {
             var x0 = measuredValues.ToArray();
             var a = incidenceMatrix.ToArray();
@@ -592,7 +592,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 var newh = H.ToArray();
                 var newD = dVector.ToArray();
                 //Добавляем уже сущ. потоки от родителя
-                foreach (var (newI, newJ, newNum) in analyzingNode.Item.Flows)
+                foreach (var (newI, newJ, newNum, newName) in analyzingNode.Item.Flows)
                 {
                     var aColumn = new double[nodesCount];
                     aColumn[newI] = 1;
@@ -623,16 +623,18 @@ namespace Balance_and_Gross_errors.Solverdir
                 //GLR
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
+                var err = fl[fl.FindIndex(x => x.FlowName == "Перем.Измер.Бензин_в_Переработка.ГО_нафты")];
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
                 if (gTest >= 0.05)
                 {
                     var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
+                    var flowName = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowName;
                     var fname = inputData.BalanceInputVariables[flowIndex].name;
                     if (check.Status == "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
                     {
-                        var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
+                        var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
-                        node.Flows.Add((i, j, flowIndex));
+                        node.Flows.Add((i, j, flowIndex, flowName));
                         node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
                         node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
                         node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
@@ -642,9 +644,9 @@ namespace Balance_and_Gross_errors.Solverdir
                     }
                     if (check.Status != "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
                     {
-                        var node = new TreeElement(new List<(int, int, int)>(analyzingNode.Item.Flows), gTest);
+                        var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
-                        node.Flows.Add((i, j, fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum));
+                        node.Flows.Add((i, j, flowIndex, flowName));
                         node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
                         node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
                         node.technologicLowerBound = technologicRangeLowerBound[flowIndex];

@@ -11,7 +11,7 @@ namespace Balance_and_Gross_errors.Models
         {
         }
 
-        public TreeElement(List<(int, int, int)> flows, double globalTestValue)
+        public TreeElement(List<(int, int, int, string)> flows, double globalTestValue)
         {
             Flows = flows;
             GlobalTestValue = globalTestValue;
@@ -19,7 +19,7 @@ namespace Balance_and_Gross_errors.Models
 
         public Guid Id { get; } = Guid.NewGuid();
 
-        public List<(int, int, int)> Flows { get; } = new List<(int, int, int)>();
+        public List<(int, int, int,string)> Flows { get; } = new List<(int, int, int, string)>();
 
         public double GlobalTestValue { get; set; }
         public double metrologicUpperBound { get; set; }
