@@ -12,7 +12,6 @@ namespace Balance_and_Gross_errors.Models
         public double Disbalance { get; set; }
         public double GlobaltestValue { get; set; }
         public string Status { get; set; }
-        //public object Data { get; set; }
 
         public List<OutputVariables> balanceOutputVariables;
         public BalanceOutput()

@@ -34,8 +34,6 @@ namespace Balance_and_Gross_errors.Solverdir
         private BalanceInput inputData;
         public double GTR;
         public double GLR;
-        public double DisbalanceOriginal;
-        public double Disbalance;
         public double[] reconciledValuesArray;
         public BalanceOutput balanceOutput;
         public List<OutputVariables> balanceOutputVariables;
@@ -103,9 +101,9 @@ namespace Balance_and_Gross_errors.Solverdir
             dVector = H * (-1) * measuredValues;
             // Инициализация вектора b
             reconciledValues = new SparseVector(incidenceMatrix.RowCount);
-            GTR = GlobalTest();
+            //GTR = GlobalTest();
         }
-        public void BalanceAccord(BalanceSettings settings)
+        public void BalanceAccord()
         {
             var func = new QuadraticObjectiveFunction(H.ToArray(), dVector.ToArray());
             var constraints = new List<LinearConstraint>();
@@ -173,8 +171,6 @@ namespace Balance_and_Gross_errors.Solverdir
             DateTime CalculationTimeFinish = DateTime.Now;
             double disbalanceOriginal = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
             double disbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(solver.Solution))).Subtract(reconciledValues).ToArray().Euclidean();
-            DisbalanceOriginal = disbalanceOriginal;
-            Disbalance = disbalance;
             double[] solution = new double[countOfThreads];
             sol = new double[countOfThreads];
             for (int i = 0; i < solution.Length; i++)
@@ -205,7 +201,7 @@ namespace Balance_and_Gross_errors.Solverdir
             balanceOutput.Status = "Success";
         }
 
-        public void BalanceGurobi(BalanceSettings settings)
+        public void BalanceGurobi()
         {
             GRBEnv env = new GRBEnv();
             GRBModel model = new GRBModel(env);
@@ -298,8 +294,6 @@ namespace Balance_and_Gross_errors.Solverdir
 
             double disbalanceOriginal = incidenceMatrix.Multiply(measuredValues).Subtract(reconciledValues).ToArray().Euclidean();
             double disbalance = incidenceMatrix.Multiply(SparseVector.OfVector(new DenseVector(results))).Subtract(reconciledValues).ToArray().Euclidean();
-            DisbalanceOriginal = disbalanceOriginal;
-            Disbalance = disbalance;
             balanceOutput = new BalanceOutput();
             balanceOutputVariables = new List<OutputVariables>();
             for (int i = 0; i < results.Length; i++)
@@ -318,7 +312,7 @@ namespace Balance_and_Gross_errors.Solverdir
             balanceOutput.balanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;
-            balanceOutput.GlobaltestValue = GTR;
+            balanceOutput.GlobaltestValue = 0.0;
             balanceOutput.Status = "Success";
         }
 

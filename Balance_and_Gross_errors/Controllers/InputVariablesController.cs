@@ -25,7 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.BalanceAccord(input.balanceSettings);
+                    solver.BalanceAccord();
                     return solver.balanceOutput;
 
                 }
@@ -48,9 +48,8 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.BalanceGurobi(input.balanceSettings);
+                    solver.BalanceGurobi();
                     return solver.balanceOutput;
-
                 }
                 catch (Exception e)
                 {
