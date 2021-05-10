@@ -101,7 +101,6 @@ namespace Balance_and_Gross_errors.Solverdir
             dVector = H * (-1) * measuredValues;
             // Инициализация вектора b
             reconciledValues = new SparseVector(incidenceMatrix.RowCount);
-            //GTR = GlobalTest();
         }
         public void BalanceAccord()
         {
@@ -316,7 +315,7 @@ namespace Balance_and_Gross_errors.Solverdir
             balanceOutput.Status = "Success";
         }
 
-        public double GlobalTest()
+        public void GlobalTest()
         {
             var x0 = measuredValues.ToArray();
             var a = incidenceMatrix.ToArray();
@@ -328,11 +327,8 @@ namespace Balance_and_Gross_errors.Solverdir
             var measurability = temp.ToArray();
             var tolerance = absTolerance.ToArray();
             GTR = StartGlobalTest(x0, a, measurability, tolerance);
-
-            return GTR;
-
         }
-        public /*static*/ double StartGlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
+        public double StartGlobalTest(double[] x0, double[,] a, double[] measurability, double[] tolerance)
         {
             var aMatrix = SparseMatrix.OfArray(a);
             var aTransposedMatrix = SparseMatrix.OfMatrix(aMatrix.Transpose());
@@ -343,7 +339,7 @@ namespace Balance_and_Gross_errors.Solverdir
 
             for (var i = 0; i < xStd.Count; i++)
             {
-                if (Math.Abs(measurability[i]) < 0.0000001)
+                if /*(Math.Abs(measurability[i]) < 0.0000001)*/(measurability[i]==0.0)
                 {
                     xStd[i] = Math.Pow(10, 2) * x0Vector.Maximum();
                 }
@@ -353,8 +349,10 @@ namespace Balance_and_Gross_errors.Solverdir
             // Вычисление вектора дисбалансов
             var r = aMatrix * x0Vector;
             var v = aMatrix * sigma * aTransposedMatrix;
-
-            var result = r * v.PseudoInverse() * r.ToColumnMatrix();
+            var vv = v.ToArray();
+            vv = vv.PseudoInverse();
+            v = SparseMatrix.OfArray(vv);
+            var result = r * v * r.ToColumnMatrix();
             var chi = ChiSquared.InvCDF(aMatrix.RowCount, 1 - 0.05);
             // нормирование
             return result[0] / chi;
@@ -508,7 +506,7 @@ namespace Balance_and_Gross_errors.Solverdir
             {
                 var sum = 0.0;
                 var correction = 0.0;
-                var (i, j, l, n) = flow;
+                var (i, j, l, _) = flow;
 
                 // Добавляем новый поток в схеме
                 var aColumn = new double[nodesCount];
@@ -617,7 +615,9 @@ namespace Balance_and_Gross_errors.Solverdir
                 //GLR
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
-                var err = fl[fl.FindIndex(x => x.FlowName == "Перем.Измер.Бензин_в_Переработка.ГО_нафты")];
+                var ijvalue = glr[i,j];
+                var err = fl[fl.FindIndex(x => x.FlowName == "Перем.Переработка.ГО_нафты_в_Узл_10.Потери")];
+                var errvalue = glr[err.Input, err.Output];
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
                 if (gTest >= 0.05)
                 {

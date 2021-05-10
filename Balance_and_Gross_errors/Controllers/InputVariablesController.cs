@@ -69,6 +69,7 @@ namespace Balance_and_Gross_errors.Controllers
                 try
                 {
                     Solver solver = new Solver(input);
+                    solver.GlobalTest();
                     var ab = solver.GTR;
                     return new GlrRes
                     {
