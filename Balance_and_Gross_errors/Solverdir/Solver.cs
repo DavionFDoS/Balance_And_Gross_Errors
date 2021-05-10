@@ -101,6 +101,7 @@ namespace Balance_and_Gross_errors.Solverdir
             dVector = H * (-1) * measuredValues;
             // Инициализация вектора b
             reconciledValues = new SparseVector(incidenceMatrix.RowCount);
+            GlobalTest();
         }
         public void BalanceAccord()
         {
@@ -109,7 +110,7 @@ namespace Balance_and_Gross_errors.Solverdir
             //добавление ограничений узлов
             for (var j = 0; j < measuredValues.ToArray().Length; j++)
             {
-                if (inputData.balanceSettings.balanceSettingsConstraints == 0)
+                if (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[j,j] == 0.0)
                 {
                     constraints.Add(new LinearConstraint(1)
                     {
@@ -189,7 +190,9 @@ namespace Balance_and_Gross_errors.Solverdir
                     name = outputVariable.name,
                     value = solution[i],
                     source = outputVariable.sourceId,
-                    target = outputVariable.destinationId
+                    target = outputVariable.destinationId,
+                    upperBound = (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[i, i] == 0.0) ? technologicRangeUpperBound[i] : metrologicRangeUpperBound[i],
+                    lowerBound = (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[i, i] == 0.0) ? technologicRangeLowerBound[i] : metrologicRangeLowerBound[i]
                 });
             }
             balanceOutput.CalculationTime = (CalculationTimeFinish - CalculationTimeStart).TotalSeconds;
@@ -212,7 +215,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 //Create variables
                 GRBVar[] varsTechnologic = new GRBVar[measuredValues.ToArray().Length];
                 for (int i = 0; i < varsTechnologic.Length; i++)
-                {
+                {                    
                     varsTechnologic[i] = model.AddVar(technologicRangeLowerBound[i], technologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
                 }
                 //Set objective
@@ -253,7 +256,15 @@ namespace Balance_and_Gross_errors.Solverdir
                 GRBVar[] varsMetrologic = new GRBVar[measuredValues.ToArray().Length];
                 for (int i = 0; i < varsMetrologic.Length; i++)
                 {
-                    varsMetrologic[i] = model.AddVar(metrologicRangeLowerBound[i], metrologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+                    if (measureIndicator[i, i] == 0)
+                    {
+                        varsMetrologic[i] = model.AddVar(technologicRangeLowerBound[i], technologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+                    }
+                    else
+                    {
+                        varsMetrologic[i] = model.AddVar(metrologicRangeLowerBound[i], metrologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
+                    }
+                        
                 }
                 //Set objective
                 GRBQuadExpr objMetroologic = new GRBQuadExpr();
@@ -304,14 +315,16 @@ namespace Balance_and_Gross_errors.Solverdir
                     name = outputVariable.name,
                     value = results[i],
                     source = outputVariable.sourceId,
-                    target = outputVariable.destinationId
+                    target = outputVariable.destinationId,
+                    upperBound = (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[i, i] == 0.0) ? technologicRangeUpperBound[i] : metrologicRangeUpperBound[i],
+                    lowerBound = (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[i, i] == 0.0) ? technologicRangeLowerBound[i] : metrologicRangeLowerBound[i]
                 });
             }
             balanceOutput.CalculationTime = (CalculationTimeFinish - CalculationTimeStart).TotalSeconds;
             balanceOutput.balanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;
-            balanceOutput.GlobaltestValue = 0.0;
+            balanceOutput.GlobaltestValue = GTR;
             balanceOutput.Status = "Success";
         }
 
