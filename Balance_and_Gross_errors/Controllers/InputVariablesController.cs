@@ -62,7 +62,7 @@ namespace Balance_and_Gross_errors.Controllers
         }
 
         [HttpPost("Gt")]
-        public async Task<GlrRes> Gtest(BalanceInput input)
+        public async Task<GtRes> Gtest(BalanceInput input)
         {
             return await Task.Run(() =>
             {
@@ -70,18 +70,18 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     Solver solver = new Solver(input);
                     solver.GlobalTest();
-                    var ab = solver.GTR;
-                    return new GlrRes
+                    var gt = solver.GTR;
+                    return new GtRes
                     {
-                        Data = ab
+                        Status = "Success",
+                        Result = gt
                     };
-
                 }
                 catch (Exception e)
                 {
-                    return new GlrRes
+                    return new GtRes
                     {
-                        Data = e.Message,
+                        Status = "Error"
                     };
                 }
             });
@@ -112,7 +112,7 @@ namespace Balance_and_Gross_errors.Controllers
                             var existingFlowIdx = flows.FindIndex(x => x.Input == i && x.Output == j);
                             if (existingFlowIdx != -1)
                             {
-                                var (_, _, existingFlow,_) = flows[existingFlowIdx];
+                                var (_, _, existingFlow, _) = flows[existingFlowIdx];
 
                                 newFlow.Id = input.BalanceInputVariables[existingFlow].id;
                                 newFlow.Name = "Поток: " + input.BalanceInputVariables[existingFlow].name;
@@ -148,6 +148,8 @@ namespace Balance_and_Gross_errors.Controllers
 
                     return new GlrRes
                     {
+                        Status = "Success",
+                        Time = solver.GlrTime,
                         Data = results
                     };
 
@@ -156,7 +158,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     return new GlrRes
                     {
-                        Data = e.Message,
+                        Status = "Error"
                     };
                 }
             });

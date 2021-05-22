@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace Balance_and_Gross_errors.Models
 {
-    public class GlrRes
+    public class GtRes
     {
         public string Status { get; set; }
-        public double Time { get; set; }
-        public List<Glr> Data { get; set; }
+        public double Result { get; set; }
     }
 }

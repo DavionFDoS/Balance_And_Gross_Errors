@@ -40,6 +40,7 @@ namespace Balance_and_Gross_errors.Solverdir
         private DenseVector absTolerance;                //вектор абсолютной погрешности
         public double[] sol;
         public double[] corr;
+        public double GlrTime;
         public Solver(BalanceInput balanceInput)
         {
 
@@ -110,7 +111,7 @@ namespace Balance_and_Gross_errors.Solverdir
             //добавление ограничений узлов
             for (var j = 0; j < measuredValues.ToArray().Length; j++)
             {
-                if (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[j,j] == 0.0)
+                if (inputData.balanceSettings.balanceSettingsConstraints == 0 || measureIndicator[j, j] == 0.0)
                 {
                     constraints.Add(new LinearConstraint(1)
                     {
@@ -215,7 +216,7 @@ namespace Balance_and_Gross_errors.Solverdir
                 //Create variables
                 GRBVar[] varsTechnologic = new GRBVar[measuredValues.ToArray().Length];
                 for (int i = 0; i < varsTechnologic.Length; i++)
-                {                    
+                {
                     varsTechnologic[i] = model.AddVar(technologicRangeLowerBound[i], technologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
                 }
                 //Set objective
@@ -264,13 +265,13 @@ namespace Balance_and_Gross_errors.Solverdir
                     {
                         varsMetrologic[i] = model.AddVar(metrologicRangeLowerBound[i], metrologicRangeUpperBound[i], 0.0, GRB.CONTINUOUS, "x" + i);
                     }
-                        
+
                 }
                 //Set objective
                 GRBQuadExpr objMetroologic = new GRBQuadExpr();
                 for (int i = 0; i < varsMetrologic.Length; i++)
                 {
-                    objMetroologic.AddTerm(H[i, i]/2.0, varsMetrologic[i], varsMetrologic[i]);
+                    objMetroologic.AddTerm(H[i, i] / 2.0, varsMetrologic[i], varsMetrologic[i]);
                 }
                 for (int i = 0; i < varsMetrologic.Length; i++)
                 {
@@ -352,7 +353,7 @@ namespace Balance_and_Gross_errors.Solverdir
 
             for (var i = 0; i < xStd.Count; i++)
             {
-                if /*(Math.Abs(measurability[i]) < 0.0000001)*/(measurability[i]==0.0)
+                if /*(Math.Abs(measurability[i]) < 0.0000001)*/(measurability[i] == 0.0)
                 {
                     xStd[i] = Math.Pow(10, 2) * x0Vector.Maximum();
                 }
@@ -376,8 +377,6 @@ namespace Balance_and_Gross_errors.Solverdir
             {
                 GRBEnv env = new GRBEnv();
                 GRBModel model = new GRBModel(env);
-                DateTime CalculationTimeStart;
-                DateTime CalculationTimeFinish;
                 double[] results = new double[x0.Length];
                 if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
                 {
@@ -448,9 +447,7 @@ namespace Balance_and_Gross_errors.Solverdir
                         model.AddConstr(expr, GRB.EQUAL, 0.0, "c" + i);
                     }
                     // Optimize model
-                    CalculationTimeStart = DateTime.Now;
                     model.Optimize();
-                    CalculationTimeFinish = DateTime.Now;
                     //results = new double[varsMetrologic.Length];
                     for (int i = 0; i < results.Length; i++)
                     {
@@ -546,10 +543,10 @@ namespace Balance_and_Gross_errors.Solverdir
                 if (sum > 0.0) correction -= sum;
                 else correction += sum;
                 corr[l] = correction;
-                //if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
-                //    continue;
-                //if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
-                //    continue;
+                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
+                    continue;
+                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
+                    continue;
                 var x0New = x0.Append(0).ToArray();
 
                 var measurabilityNew = measurability.Append(0).ToArray();
@@ -565,13 +562,14 @@ namespace Balance_and_Gross_errors.Solverdir
 
         public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum, string FlowName)>) StartGlr()
         {
+            DateTime CalculationTimeStart;
+            DateTime CalculationTimeFinish;
             var x0 = measuredValues.ToArray();
             var a = incidenceMatrix.ToArray();
             var metrU = metrologicRangeUpperBound.ToArray();
             var metrL = metrologicRangeLowerBound.ToArray();
             var techU = technologicRangeUpperBound.ToArray();
             var techL = technologicRangeLowerBound.ToArray();
-            //var d = dVector.ToArray();
             var temp = new SparseVector(countOfThreads);
             for (int i = 0; i < countOfThreads; i++)
             {
@@ -622,17 +620,17 @@ namespace Balance_and_Gross_errors.Solverdir
                     newD = newD.Append(0).ToArray();
                     newA = newA.InsertColumn(aColumn);
                 }
+                CalculationTimeStart = DateTime.Now;
                 //Значение глобального теста
                 var gTest = StartGlobalTest(newX0, newA, newMeasurability, newTolerance);
 
                 //GLR
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
-                var ijvalue = glr[i,j];
-                var err = fl[fl.FindIndex(x => x.FlowName == "Перем.Переработка.ГО_нафты_в_Узл_10.Потери")];
-                var errvalue = glr[err.Input, err.Output];
+                var ijvalue = glr[i, j];
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
-                if (gTest >= 0.05)
+                //if (gTest >= 0.05)
+                if (gTest >= 0.005)
                 {
                     var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
                     var flowName = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowName;
@@ -642,10 +640,10 @@ namespace Balance_and_Gross_errors.Solverdir
                         var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
                         node.Flows.Add((i, j, flowIndex, flowName));
-                        node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
-                        node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
-                        node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
-                        node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
+                        //node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
+                        //node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
+                        //node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
+                        //node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
                         inputData.BalanceInputVariables[flowIndex].metrologicLowerBound = corr[flowIndex] - tolerance[flowIndex];
                         inputData.BalanceInputVariables[flowIndex].metrologicUpperBound = corr[flowIndex] + tolerance[flowIndex];
                     }
@@ -653,15 +651,17 @@ namespace Balance_and_Gross_errors.Solverdir
                     {
                         var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
-                        node.Flows.Add((i, j, flowIndex, flowName));
-                        node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
-                        node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
-                        node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
-                        node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
+                        //node.Flows.Add((i, j, flowIndex, flowName));
+                        //node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
+                        //node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
+                        //node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
+                        //node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
                     }
                 }
                 else
                 {
+                    CalculationTimeFinish = DateTime.Now;
+                    GlrTime = (CalculationTimeFinish - CalculationTimeStart).TotalSeconds;
                     analyzingNode.Item.GlobalTestValue = gTest;
                     analyzingNode = null;
                 }
