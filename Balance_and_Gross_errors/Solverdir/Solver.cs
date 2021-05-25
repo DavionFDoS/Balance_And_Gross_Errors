@@ -102,7 +102,7 @@ namespace Balance_and_Gross_errors.Solverdir
             dVector = H * (-1) * measuredValues;
             // Инициализация вектора b
             reconciledValues = new SparseVector(incidenceMatrix.RowCount);
-            GlobalTest();
+            //GlobalTest();
         }
         public void BalanceAccord()
         {
@@ -325,7 +325,7 @@ namespace Balance_and_Gross_errors.Solverdir
             balanceOutput.balanceOutputVariables = balanceOutputVariables;
             balanceOutput.DisbalanceOriginal = disbalanceOriginal;
             balanceOutput.Disbalance = disbalance;
-            balanceOutput.GlobaltestValue = GTR;
+            balanceOutput.GlobaltestValue = 0.0;
             balanceOutput.Status = "Success";
         }
 
