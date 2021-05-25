@@ -560,6 +560,71 @@ namespace Balance_and_Gross_errors.Solverdir
             return (glrTable, flows);
         }
 
+        public (double[,], List<(int Input, int Output, int FlowNum, string FlowName)>) ParallelGlrTest(double[] x0, double[,] a, double[] measurability, double[] tolerance,
+            List<(int, int, int, string)> flows, double globalTest)
+        {
+            var nodesCount = a.GetLength(0);
+            corr = new double[countOfThreads];
+            var glrTable = new double[nodesCount, nodesCount];
+
+            //foreach (var flow in flows)
+            Parallel.ForEach(flows, op => b(op));
+            void b((int,int,int,string)ff)
+            {
+                var sum = 0.0;
+                var correction = 0.0;
+                var (i, j, l, _) =ff;
+
+                // Добавляем новый поток в схеме
+                var aColumn = new double[nodesCount];
+                aColumn[i] = -1;
+                aColumn[j] = 1;
+
+                var aNew = a.InsertColumn(aColumn);
+
+                var aRow = new double[x0.Length];
+                for (int k = 0; k < x0.Length; k++)
+                    aRow[k] = a[i, k];
+                for (int k = 0; k < x0.Length; k++)
+                {
+                    if (k == l)
+                        continue;
+                    else
+                    {
+                        if (aRow[k] == 1)
+                            sum += x0[k];
+                        else if (aRow[k] == -1)
+                            sum -= x0[k];
+                    }
+                }
+                if (sum > 0.0) correction -= sum;
+                else correction += sum;
+                corr[l] = correction;
+                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
+                {
+                    glrTable[i, j] = 0.0;
+                    return;
+                }
+                //continue;
+                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
+                {
+                    glrTable[i, j] = 0.0;
+                    return;
+                }
+                //continue;
+                var x0New = x0.Append(0).ToArray();
+
+                var measurabilityNew = measurability.Append(0).ToArray();
+                var toleranceNew = tolerance.Append(0).ToArray();
+
+                // Считаем тест и находим разницу
+                glrTable[i, j] = globalTest - StartGlobalTest(x0New, aNew, measurabilityNew, toleranceNew);
+            }
+
+
+            return (glrTable, flows);
+        }
+
         public (MutableEntityTreeNode<Guid, TreeElement>, List<(int Input, int Output, int FlowNum, string FlowName)>) StartGlr()
         {
             DateTime CalculationTimeStart;
@@ -626,11 +691,12 @@ namespace Balance_and_Gross_errors.Solverdir
 
                 //GLR
                 var (glr, fl) = GlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
+                //var (glr, fl) = ParallelGlrTest(newX0, newA, newMeasurability, newTolerance, flows, gTest);
                 var (i, j) = glr.ArgMax();
                 var ijvalue = glr[i, j];
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
                 //if (gTest >= 0.05)
-                if (gTest >= 0.005)
+                if (gTest >= 1)
                 {
                     var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
                     var flowName = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowName;
@@ -651,7 +717,7 @@ namespace Balance_and_Gross_errors.Solverdir
                     {
                         var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
-                        //node.Flows.Add((i, j, flowIndex, flowName));
+                        node.Flows.Add((i, j, flowIndex, flowName));
                         //node.metrologicLowerBound = metrologicRangeLowerBound[flowIndex];
                         //node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
                         //node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
