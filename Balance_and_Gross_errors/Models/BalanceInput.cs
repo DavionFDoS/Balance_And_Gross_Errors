@@ -33,9 +33,9 @@ namespace Balance_and_Gross_errors.Models
                         balanceInputVariables.Add(input);
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    throw new ArgumentException(nameof(e));
+                    throw new ArgumentException();
                 }
 
             }
