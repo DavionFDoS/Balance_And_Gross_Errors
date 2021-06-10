@@ -544,9 +544,9 @@ namespace Balance_and_Gross_errors.Solverdir
                 else correction += sum;
                 corr[l] = correction;
                 if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
-                    continue;
-                if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
-                    continue;
+                    //continue;
+                    if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
+                        continue;
                 var x0New = x0.Append(0).ToArray();
 
                 var measurabilityNew = measurability.Append(0).ToArray();
@@ -569,11 +569,11 @@ namespace Balance_and_Gross_errors.Solverdir
 
             //foreach (var flow in flows)
             Parallel.ForEach(flows, op => b(op));
-            void b((int,int,int,string)ff)
+            void b((int, int, int, string) ff)
             {
                 var sum = 0.0;
                 var correction = 0.0;
-                var (i, j, l, _) =ff;
+                var (i, j, l, _) = ff;
 
                 // Добавляем новый поток в схеме
                 var aColumn = new double[nodesCount];
@@ -603,13 +603,13 @@ namespace Balance_and_Gross_errors.Solverdir
                 if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC && ((measuredValues[l] + corr[l]) < metrologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > metrologicRangeLowerBound[l]))
                 {
                     glrTable[i, j] = 0.0;
-                    return;
+                    //return;
                 }
                 //continue;
                 if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC && ((measuredValues[l] + corr[l]) < technologicRangeLowerBound[l] || (measuredValues[l] + corr[l]) > technologicRangeUpperBound[l]))
                 {
                     glrTable[i, j] = 0.0;
-                    return;
+                    //return;
                 }
                 //continue;
                 var x0New = x0.Append(0).ToArray();
@@ -695,13 +695,13 @@ namespace Balance_and_Gross_errors.Solverdir
                 var (i, j) = glr.ArgMax();
                 var ijvalue = glr[i, j];
                 var check = BalanceGurobiForGLR(newX0, newA, newh, newD, newtechL, newtechU, newmetrL, newmetrU);
-                //if (gTest >= 0.05)
-                if (gTest >= 1)
+                if (gTest >= 0.05)
+                //if (gTest >= 0.005)
                 {
                     var flowIndex = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowNum;
                     var flowName = fl[fl.FindIndex(x => x.Input == i && x.Output == j)].FlowName;
                     var fname = inputData.BalanceInputVariables[flowIndex].name;
-                    if (check.Status == "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
+                    if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.TECHNOLOGIC)
                     {
                         var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
@@ -710,10 +710,10 @@ namespace Balance_and_Gross_errors.Solverdir
                         //node.metrologicUpperBound = metrologicRangeUpperBound[flowIndex];
                         //node.technologicLowerBound = technologicRangeLowerBound[flowIndex];
                         //node.technologicUpperBound = technologicRangeUpperBound[flowIndex];
-                        inputData.BalanceInputVariables[flowIndex].metrologicLowerBound = corr[flowIndex] - tolerance[flowIndex];
-                        inputData.BalanceInputVariables[flowIndex].metrologicUpperBound = corr[flowIndex] + tolerance[flowIndex];
+                        //inputData.BalanceInputVariables[flowIndex].metrologicLowerBound = corr[flowIndex] - tolerance[flowIndex];
+                        //inputData.BalanceInputVariables[flowIndex].metrologicUpperBound = corr[flowIndex] + tolerance[flowIndex];
                     }
-                    if (check.Status != "Success" && inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
+                    if (inputData.balanceSettings.balanceSettingsConstraints == BalanceSettings.BalanceSettingsConstraints.METROLOGIC)
                     {
                         var node = new TreeElement(new List<(int, int, int, string)>(analyzingNode.Item.Flows), gTest);
                         analyzingNode = analyzingNode.AddChild(node);
