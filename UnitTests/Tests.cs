@@ -18,7 +18,7 @@ namespace UnitTests
             var expected = 0.1552143053428158;
 
             var controller = new InputVariablesController();
-            var result = controller.GetBalance(inputData).Result;
+            var result = controller.GetBalanceGurobi(inputData).Result;
             Assert.AreEqual("Success", result.Status);
             Assert.AreEqual(expected, result.GlobaltestValue);
         }
@@ -39,7 +39,7 @@ namespace UnitTests
             };
 
             var controller = new InputVariablesController();
-            var result = controller.GetBalance(inputData).Result;
+            var result = controller.GetBalanceGurobi(inputData).Result;
             Assert.AreEqual("Success", result.Status);
             for (var i = 0; i < expected.Length; i++)
             {
@@ -53,7 +53,7 @@ namespace UnitTests
             var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\MetrologicBoundsError.json"));
 
             var controller = new InputVariablesController();
-            var result = controller.GetBalance(inputData).Result;
+            var result = controller.GetBalanceGurobi(inputData).Result;
             Assert.AreEqual("MetrologicBounds are incorrect", result.Status);
         }
         
@@ -63,7 +63,7 @@ namespace UnitTests
             var inputData = JsonConvert.DeserializeObject<BalanceInput>(File.ReadAllText(@"C:\Users\Matvey\source\repos\Gradwork\Balance_And_Gross_Errors\UnitTests\TechnologicBoundsError.json"));
 
             var controller = new InputVariablesController();
-            var result = controller.GetBalance(inputData).Result;
+            var result = controller.GetBalanceGurobi(inputData).Result;
             Assert.AreEqual("TechnologicBounds are incorrect", result.Status);
         }
     }
