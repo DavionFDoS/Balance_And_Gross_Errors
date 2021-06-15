@@ -14,10 +14,7 @@ namespace Balance_and_Gross_errors.Graphdir
         private double[,] matrix;
         public Graph(BalanceInput balanceInput)
         {
-            //if (balanceInput == null) throw new NullPointerException("balanceInput can't be null");
-
             vertexList = new List<Vertex>();
-
             // Определение количества потоков
             int countOfThreads = balanceInput.BalanceInputVariables.Count();
             // Создание вершин графа

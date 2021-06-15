@@ -16,8 +16,8 @@ namespace Balance_and_Gross_errors.Controllers
     [Produces("application/json")]
     public class InputVariablesController : ControllerBase
     {
-        [HttpPost]
-        public async Task<BalanceOutput> GetBalance(BalanceInput input)
+        [HttpPost("AccordSolver")]
+        public async Task<BalanceOutput> GetBalanceAccord(BalanceInput input)
         {
             return await Task.Run(() =>
             {
@@ -25,7 +25,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    solver.Balance();             
+                    solver.BalanceAccord();
                     return solver.balanceOutput;
 
                 }
@@ -40,8 +40,8 @@ namespace Balance_and_Gross_errors.Controllers
             });
         }
 
-        [HttpPost("GLR")]
-        public async Task<GlrRes> GlrTest(BalanceInput input)
+        [HttpPost("GurobiSolver")]
+        public async Task<BalanceOutput> GetBalanceGurobi(BalanceInput input)
         {
             return await Task.Run(() =>
             {
@@ -49,7 +49,54 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     // Решение задачи
                     Solver solver = new Solver(input);
-                    var (root, flows) = solver.GlrPrep();
+                    solver.BalanceGurobi();
+                    return solver.balanceOutput;
+                }
+                catch (Exception e)
+                {
+                    return new BalanceOutput
+                    {
+                        Status = e.Message,
+                    };
+                }
+            });
+        }
+
+        [HttpPost("Gt")]
+        public async Task<GtRes> Gtest(BalanceInput input)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    Solver solver = new Solver(input);
+                    solver.GlobalTest();
+                    var gt = solver.GTR;
+                    return new GtRes
+                    {
+                        Status = "Success",
+                        Result = gt
+                    };
+                }
+                catch (Exception e)
+                {
+                    return new GtRes
+                    {
+                        Status = "Error"
+                    };
+                }
+            });
+        }
+
+        [HttpPost("GLR")]
+        public async Task<GlrRes> GlrTest(BalanceInput input)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    Solver solver = new Solver(input);
+                    var (root, flows) = solver.StartGlr();
                     var nodes = root.Where(x => x.IsLeaf);
                     var results = new List<Glr>();
 
@@ -59,28 +106,29 @@ namespace Balance_and_Gross_errors.Controllers
                         var flowCorrections = new List<InputVariables>();
                         foreach (var flow in node.Item.Flows)
                         {
-                            var (i, j) = flow;
+                            var (i, j, k, n) = flow;
 
-                            var newFlow = new Flow($"Соединяет узлы: {i+1} -> {j+1}");
+                            var newFlow = new Flow($"Соединяет узлы: {i} -> {j}");
 
                             var existingFlowIdx = flows.FindIndex(x => x.Input == i && x.Output == j);
                             if (existingFlowIdx != -1)
                             {
-                                var (_, _, existingFlow) = flows[existingFlowIdx];
+                                var (_, _, existingFlow, _) = flows[existingFlowIdx];
 
-                                newFlow.Id =  input.BalanceInputVariables[existingFlow].id;
-                                newFlow.Name = "Поток " + input.BalanceInputVariables[existingFlow].name;
+                                newFlow.Id = input.BalanceInputVariables[existingFlow].id;
+                                newFlow.Name = "Поток: " + input.BalanceInputVariables[existingFlow].name;
 
                                 var variable = new InputVariables
                                 {
                                     id = Guid.NewGuid().ToString(),
                                     sourceId = input.BalanceInputVariables[i].id,
                                     destinationId = input.BalanceInputVariables[j].id,
-                                    name = input.BalanceInputVariables[existingFlow].name + " Дополнительный поток",
-                                    measured = 0.0000,
+                                    name = input.BalanceInputVariables[existingFlow].name + " (Доп. поток)",
+                                    measured = input.BalanceInputVariables[existingFlow].measured,
+                                    correction = input.BalanceInputVariables[existingFlow].measured + solver.corr[existingFlow],
                                     metrologicLowerBound = input.BalanceInputVariables[existingFlow].metrologicLowerBound,
                                     metrologicUpperBound = input.BalanceInputVariables[existingFlow].metrologicUpperBound,
-                                    technologicLowerBound= input.BalanceInputVariables[existingFlow].technologicLowerBound,
+                                    technologicLowerBound = input.BalanceInputVariables[existingFlow].technologicLowerBound,
                                     technologicUpperBound = input.BalanceInputVariables[existingFlow].technologicUpperBound,
                                     tolerance = input.BalanceInputVariables[existingFlow].tolerance,
                                     isMeasured = true,
@@ -101,6 +149,8 @@ namespace Balance_and_Gross_errors.Controllers
 
                     return new GlrRes
                     {
+                        Status = "Success",
+                        Time = solver.GlrTime,
                         Data = results
                     };
 
@@ -109,7 +159,7 @@ namespace Balance_and_Gross_errors.Controllers
                 {
                     return new GlrRes
                     {
-                        Data = e.Message,
+                        Status = "Error"
                     };
                 }
             });

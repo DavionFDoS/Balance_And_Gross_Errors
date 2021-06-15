@@ -7,11 +7,11 @@ namespace Balance_and_Gross_errors.Models
 {
     public class BalanceOutput
     {
+        public double CalculationTime { get; set; }
         public double DisbalanceOriginal { get; set; }
         public double Disbalance { get; set; }
         public double GlobaltestValue { get; set; }
         public string Status { get; set; }
-        public object Data { get; set; }
 
         public List<OutputVariables> balanceOutputVariables;
         public BalanceOutput()

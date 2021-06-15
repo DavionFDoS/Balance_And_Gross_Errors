@@ -13,5 +13,9 @@ namespace Balance_and_Gross_errors.Models
         public string name { get; set; }
         public double value { get; set; }
 
+        public double upperBound { get; set; }
+
+        public double lowerBound { get; set; }
+
     }
 }
